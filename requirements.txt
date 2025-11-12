@@ -1,7 +1,7 @@
 streamlit==1.51.0
 pandas==2.3.3
 plotly==6.4.0
-numpy==2.3.4
+numpy>=2.0.0,<2.3.0
 folium==0.20.0
 streamlit-folium==0.25.3
 pyproj==3.7.2
