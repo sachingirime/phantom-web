@@ -1782,7 +1782,7 @@ with col2:
         <div class="feature-title">AI-Powered Analysis</div>
         <div class="feature-text">
             Our smart AI is trained to find methane plumes. It's extremely good at finding real leaks 
-            and ignoring things that just *look* like leaks, which keeps errors low.
+            and ignoring background clusters and artifacts which are confounders to real emissions, which keeps errors low.
         </div>
     </div>
     """, unsafe_allow_html=True)
