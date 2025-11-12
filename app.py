@@ -1769,8 +1769,7 @@ with col1:
         <span class="feature-icon">🛰️</span>
         <div class="feature-title">Aerial and Satellite Detection</div>
         <div class="feature-text">
-          We use data from airborne platforms and satellites to look at the Earth. Our system can spot the invisible signature of methane gas from space, even in complex landscapes. This methodology ensures robust coverage and high detection fidelity.
-                 </div>
+    We use data from airborne platforms and satellites to look at the Earth's atmosphere. Our system can spot the invisible spectral signature of methane gas from space, even in complex landscapes and terrains. This methodology ensures robust coverage and high detection fidelity across regions.                 </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1791,7 +1790,7 @@ with col3:
         <span class="feature-icon">📊</span>
         <div class="feature-title">Emission Quantification</div>
         <div class="feature-text">
-           Once we find a plume, our system automatically quantifies its size using advanced enhancement methods. We report this value in kilograms per hour ($\text{kg/hr}$), giving clients a clear, actionable number. This quantification provides the necessary intelligence for effective mitigation planning.
+           Once we find a plume, our system automatically quantifies its size using advanced enhancement methods. We report this value in kilograms per hour (kg/hr), giving clients a clear, actionable number. This quantification provides the necessary intelligence for effective mitigation planning.
                 </div>
     </div>
     """, unsafe_allow_html=True)
