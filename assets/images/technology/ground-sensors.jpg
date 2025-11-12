@@ -1,0 +1,21 @@
+![Ground Sensors Technology](../../../assets/images/technology/ground-sensors.jpg)
+
+Ground sensors are crucial for methane detection as they provide real-time, localized measurements of methane concentrations. These sensors can be deployed in various environments, including urban areas, agricultural fields, and industrial sites, allowing for precise monitoring of methane emissions. 
+
+### Importance of Ground Sensors in Methane Detection
+
+1. **Real-Time Monitoring**: Ground sensors offer immediate feedback on methane levels, enabling quick responses to leaks or emissions.
+2. **High Sensitivity**: These sensors can detect low concentrations of methane, making them essential for identifying small leaks that might otherwise go unnoticed.
+3. **Cost-Effective**: Compared to satellite technologies, ground sensors are often more affordable and easier to deploy, especially in remote or hard-to-reach areas.
+4. **Data Integration**: Ground sensors can be integrated with other technologies, such as drones and satellites, to provide a comprehensive view of methane emissions across different scales.
+
+### Current Technologies for Measuring Methane Emissions
+
+- **Hyperspectral Imaging**: Utilizes advanced imaging techniques to detect methane from a distance, providing detailed spectral data.
+- **Lidar Detection**: Employs laser technology to measure methane concentrations in the atmosphere, offering high-resolution data over large areas.
+- **Satellite Monitoring**: Technologies like Carbon Mapper, MethaneSat, and GHGSat use satellite imagery to monitor methane emissions globally, providing valuable data for climate research and policy-making.
+
+### References
+- **Carbon Mapper**: A satellite mission focused on mapping methane emissions to support climate action.
+- **MethaneSat**: A satellite designed to monitor methane emissions with high precision, contributing to global efforts in emission reduction.
+- **GHGSat**: A company that provides satellite-based monitoring of greenhouse gases, including methane, to help industries manage their emissions effectively.

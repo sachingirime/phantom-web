@@ -1,0 +1,67 @@
+{
+    "methane_importance": {
+        "description": "Methane is a potent greenhouse gas that significantly contributes to climate change. It is over 25 times more effective than carbon dioxide at trapping heat in the atmosphere over a 100-year period.",
+        "impact": {
+            "climate_change": {
+                "details": "Methane emissions are responsible for approximately 30% of the global warming observed since the pre-industrial era.",
+                "image": "assets/images/methane-impact/climate-warming.jpg"
+            },
+            "emission_sources": {
+                "details": "Major sources of methane emissions include agriculture (especially livestock), landfills, natural gas production, and wetlands.",
+                "image": "assets/images/methane-impact/emission-sources.jpg"
+            },
+            "atmospheric_concentration": {
+                "details": "The concentration of methane in the atmosphere has more than doubled since the 1750s, reaching levels that are concerning for climate stability.",
+                "image": "assets/images/methane-impact/atmospheric-concentration.jpg"
+            }
+        }
+    },
+    "current_technologies": {
+        "description": "Various technologies are currently employed to measure methane emissions, each with its own advantages and applications.",
+        "technologies": [
+            {
+                "name": "Hyperspectral Imaging",
+                "details": "This technology captures a wide spectrum of light to identify methane concentrations in the atmosphere.",
+                "image": "assets/images/technology/hyperspectral-imaging.jpg"
+            },
+            {
+                "name": "Lidar Detection",
+                "details": "Lidar uses laser pulses to detect methane concentrations and can provide high-resolution data over large areas.",
+                "image": "assets/images/technology/lidar-detection.jpg"
+            },
+            {
+                "name": "Ground Sensors",
+                "details": "These sensors are deployed at various locations to continuously monitor methane levels and provide real-time data.",
+                "image": "assets/images/technology/ground-sensors.jpg"
+            }
+        ]
+    },
+    "satellite_technologies": {
+        "description": "Satellite technologies play a crucial role in monitoring methane emissions globally.",
+        "satellites": [
+            {
+                "name": "Carbon Mapper",
+                "details": "Carbon Mapper is designed to provide high-resolution data on methane emissions from various sources.",
+                "image": "assets/images/satellites/carbon-mapper.jpg",
+                "reference": "https://carbonmapper.org"
+            },
+            {
+                "name": "MethaneSat",
+                "details": "MethaneSat aims to monitor methane emissions from oil and gas operations, landfills, and agriculture.",
+                "image": "assets/images/satellites/methanesat.jpg",
+                "reference": "https://methanesat.org"
+            },
+            {
+                "name": "GHGSat",
+                "details": "GHGSat provides satellite-based monitoring of greenhouse gas emissions, focusing on industrial sources.",
+                "image": "assets/images/satellites/ghgsat.jpg",
+                "reference": "https://ghgsat.com"
+            },
+            {
+                "name": "AVIRIS-NG",
+                "details": "AVIRIS-NG is a hyperspectral imaging system that captures detailed information about methane emissions.",
+                "image": "assets/images/satellites/aviris-ng.jpg"
+            }
+        ]
+    }
+}

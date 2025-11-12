@@ -1,0 +1,12 @@
+streamlit
+pandas
+plotly
+numpy
+folium
+streamlit-folium
+pyproj
+torch
+torchvision
+rasterio
+opencv-python
+Pillow

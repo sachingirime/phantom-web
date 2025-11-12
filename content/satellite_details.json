@@ -1,0 +1,32 @@
+{
+    "satellite_technologies": [
+        {
+            "name": "Carbon Mapper",
+            "description": "Carbon Mapper is a satellite-based system designed to detect and quantify methane emissions from various sources. It utilizes advanced imaging techniques to provide high-resolution data on methane leaks, enabling targeted interventions.",
+            "importance": "This technology plays a crucial role in monitoring emissions from oil and gas operations, landfills, and agricultural practices, helping to mitigate climate change.",
+            "image": "assets/images/satellites/carbon-mapper.jpg",
+            "reference": "https://carbonmapper.org"
+        },
+        {
+            "name": "MethaneSat",
+            "description": "MethaneSat is a dedicated satellite mission aimed at monitoring methane emissions globally. It is equipped with advanced sensors that can detect methane concentrations in the atmosphere with high precision.",
+            "importance": "By providing comprehensive data on methane emissions, MethaneSat supports climate action initiatives and helps governments and organizations track their progress in reducing greenhouse gases.",
+            "image": "assets/images/satellites/methanesat.jpg",
+            "reference": "https://www.methanesat.org"
+        },
+        {
+            "name": "GHGSat",
+            "description": "GHGSat operates satellites that monitor greenhouse gas emissions from industrial facilities worldwide. Its technology allows for the detection of methane emissions from space, providing valuable insights into emission sources.",
+            "importance": "GHGSat's data is essential for regulatory compliance and environmental monitoring, enabling industries to reduce their carbon footprint and improve sustainability.",
+            "image": "assets/images/satellites/ghgsat.jpg",
+            "reference": "https://www.ghgsat.com"
+        },
+        {
+            "name": "AVIRIS-NG",
+            "description": "The Airborne Visible/Infrared Imaging Spectrometer - Next Generation (AVIRIS-NG) is an advanced hyperspectral imaging system that captures detailed spectral information across a wide range of wavelengths.",
+            "importance": "AVIRIS-NG is used for research and monitoring of methane emissions, providing critical data for understanding atmospheric processes and the impact of emissions on climate change.",
+            "image": "assets/images/satellites/aviris-ng.jpg",
+            "reference": "https://aviris-ng.jpl.nasa.gov"
+        }
+    ]
+}
