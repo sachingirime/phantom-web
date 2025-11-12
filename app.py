@@ -1781,7 +1781,7 @@ with col2:
         <span class="feature-icon">🧠</span>
         <div class="feature-title">AI-Powered Analysis</div>
         <div class="feature-text">
-            Our smart AI is trained to find methane plumes. It's extremely good at finding real leaks 
+           PHANTOM is trained to find methane plumes. It's extremely good at finding real leaks 
             and ignoring background clusters and artifacts which are confounders to real emissions, which keeps errors low.
         </div>
     </div>
