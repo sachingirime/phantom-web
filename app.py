@@ -1769,7 +1769,7 @@ with col1:
         <span class="feature-icon">🛰️</span>
         <div class="feature-title">Aerial and Satellite Detection</div>
         <div class="feature-text">
-    We use data from airborne platforms and satellites to look at the Earth's atmosphere. Our system can spot the invisible spectral signature of methane gas from space, even in complex landscapes and terrains. This methodology ensures robust coverage and high detection fidelity across regions.                 </div>
+    We use data from airborne platforms and satellites to look at the Earth's atmosphere. Our system can spot the invisible spectral signature of methane gas from space, even in complex landscapes and terrains. This methodology ensures robust coverage and high detection fidelity.                 </div>
     </div>
     """, unsafe_allow_html=True)
 
