@@ -1769,9 +1769,8 @@ with col1:
         <span class="feature-icon">🛰️</span>
         <div class="feature-title">Aerial and Satellite Detection</div>
         <div class="feature-text">
-            We use data from airborne platforms and satellites to look at the Earth. Our system can spot the invisible 
-            signature of methane gas from space, even in complex landscapes.
-        </div>
+          We use data from airborne platforms and satellites to look at the Earth. Our system can spot the invisible signature of methane gas from space, even in complex landscapes. This methodology ensures robust coverage and high detection fidelity.
+                 </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1781,9 +1780,8 @@ with col2:
         <span class="feature-icon">🧠</span>
         <div class="feature-title">AI-Powered Analysis</div>
         <div class="feature-text">
-           PHANTOM is trained to find methane plumes. It's extremely good at finding real leaks 
-            and ignoring background clusters and artifacts which are confounders to real emissions, which keeps errors low.
-        </div>
+         PHANTOM is trained to find methane plumes. It's extremely good at finding real leaks and ignoring background clusters and artifacts which are confounders to real emissions, which keeps errors low. The system provides a reliable and accurate distinction between actual sources and noise.
+                </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1793,9 +1791,8 @@ with col3:
         <span class="feature-icon">📊</span>
         <div class="feature-title">Emission Quantification</div>
         <div class="feature-text">
-            Once we find a plume, our system automatically quantifies using enhancement methods. 
-            We report this in kilograms per hour, giving you a clear, actionable number.
-        </div>
+           Once we find a plume, our system automatically quantifies its size using advanced enhancement methods. We report this value in kilograms per hour ($\text{kg/hr}$), giving clients a clear, actionable number. This quantification provides the necessary intelligence for effective mitigation planning.
+                </div>
     </div>
     """, unsafe_allow_html=True)
 
