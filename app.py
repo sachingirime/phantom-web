@@ -1987,7 +1987,8 @@ with col3:
     """, unsafe_allow_html=True)
 
 # Methane sources subsection
-st.markdown('<h3 class="subsection-title">Global Emission Sources</h3>', unsafe_allow_html=True)
+st.markdown("<br><br><br>", unsafe_allow_html=True) # Adds two line breaks
+st.markdown('<h3 class="subsection-title">Emission Sources</h3>', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 
@@ -2007,7 +2008,7 @@ with col1:
             st.markdown('<div class="img-container">', unsafe_allow_html=True)
             st.image(img, use_column_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
-            st.markdown('<p class="img-caption">Global Methane Emission Sources by Sector</p>', unsafe_allow_html=True)
+            st.markdown('<p class="img-caption">US Methane Emission Sources by Sector</p>', unsafe_allow_html=True)
     except:
         pass
 
@@ -2027,7 +2028,7 @@ with col2:
             st.markdown('<div class="img-container">', unsafe_allow_html=True)
             st.image(img, use_column_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
-            st.markdown('<p class="img-caption">Methane\'s Contribution to Global Temperature Rise</p>', unsafe_allow_html=True)
+            st.markdown('<p class="img-caption">Global Temperature Rise Chart</p>', unsafe_allow_html=True)
     except:
         pass
 
