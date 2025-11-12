@@ -1767,7 +1767,7 @@ with col1:
     st.markdown("""
     <div class="feature-card">
         <span class="feature-icon">🛰️</span>
-        <div class="feature-title">Satellite Detection</div>
+        <div class="feature-title">Aerial and Satellite Detection</div>
         <div class="feature-text">
             We use data from airborne platforms and satellites to look at the Earth. Our system can spot the invisible 
             signature of methane gas from space, even in complex landscapes.
@@ -1793,7 +1793,7 @@ with col3:
         <span class="feature-icon">📊</span>
         <div class="feature-title">Emission Quantification</div>
         <div class="feature-text">
-            Once we find a plume, our system automatically calculates *how much* methane is leaking. 
+            Once we find a plume, our system automatically quantifies using enhancement methods. 
             We report this in kilograms per hour, giving you a clear, actionable number.
         </div>
     </div>
