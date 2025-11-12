@@ -1968,7 +1968,9 @@ with col2:
         <div class="impact-number">30%</div>
         <div class="impact-title">Global Warming Contribution</div>
         <div class="impact-text">
-           Accounts for 30% of industrial-era global warming, second only to CO₂ in overall climate impact.</div>
+            Responsible for approximately 30% of global temperature rise.
+            Its potency makes it second only to carbon dioxide in overall climate impact.
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
