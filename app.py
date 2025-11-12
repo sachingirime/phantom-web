@@ -1904,11 +1904,11 @@ if len(df) > 0:
         <div style="font-weight: 600; margin-bottom: 10px; color: #0f172a;">Detection Legend</div>
         <div style="margin: 8px 0; display: flex; align-items: center;">
             <div style="width: 16px; height: 16px; background: #dc2626; border-radius: 50%; margin-right: 8px;"></div>
-            <span>Critical (≥100 kg/hr)</span>
+            <span style="color: #0f172a;">Super-Emitters (≥100 kg/hr)</span>
         </div>
         <div style="margin: 8px 0; display: flex; align-items: center;">
             <div style="width: 14px; height: 14px; background: #059669; border-radius: 50%; margin-right: 10px;"></div>
-            <span>Standard (<100 kg/hr)</span>
+            <span style="color: #0f172a;">Small Leaks (<100 kg/hr)</span>
         </div>
         <hr style="margin: 10px 0; border: 0; border-top: 1px solid #e2e8f0;">
         <div style="font-size: 0.8rem; color: #64748b;">
