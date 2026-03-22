@@ -52,17 +52,18 @@ const mapEl   = ref(null)
 const summary = ref(null)
 const loading = ref(true)
 
-// ── Gas plume colormap — electric neon hazard ────────────────────────────────
-// violet → hot magenta → vivid orange → bright gold → white
-// Fully saturated — pops hard on any satellite terrain (green, tan, water).
+// ── Gas plume colormap — blue → violet → magenta → pink → white ──────────────
+// Every stop is a color that CANNOT appear in tan/green/brown satellite terrain.
+// No orange, no yellow, no green — those all blend with soil and vegetation.
 function thermalRGB(t) {
   t = Math.max(0, Math.min(1, t))
   const stops = [
-    [100,   0, 255],  // electric violet  (low)
-    [255,   0, 160],  // hot magenta
-    [255,  50,   0],  // vivid orange-red
-    [255, 220,   0],  // bright gold
-    [255, 255, 255],  // pure white       (peak)
+    [0,   90, 255],  // electric blue    (low)
+    [80,   0, 255],  // blue-violet
+    [200,  0, 220],  // vivid violet
+    [255,  0, 140],  // hot magenta-pink
+    [255, 80, 160],  // bright pink
+    [255, 255, 255], // pure white       (peak)
   ]
   const n   = stops.length - 1
   const idx = Math.min(Math.floor(t * n), n - 1)
@@ -213,12 +214,21 @@ function animatePlumes(canvas, map, pane, emissions, qMin, qMax) {
         const a = conc * fadeIn * fadeOut * strength * 0.42
         if (a < 0.004) return
 
-        const r  = sigma * 0.90
-        // Sharp core gradient: punchy opaque center, tight falloff → vivid not washed out
+        const r = sigma * 0.90
+
+        // Dark contrast halo — makes bright colors pop against light terrain
+        const rHalo = r * 1.6
+        const halo = ctx.createRadialGradient(px, py, r * 0.5, px, py, rHalo)
+        halo.addColorStop(0,   `rgba(0,0,0,${a * 0.35})`)
+        halo.addColorStop(1,   `rgba(0,0,0,0)`)
+        ctx.fillStyle = halo
+        ctx.beginPath(); ctx.arc(px, py, rHalo, 0, Math.PI * 2); ctx.fill()
+
+        // Vivid neon core — sharp opaque center, tight falloff
         const rg = ctx.createRadialGradient(px, py, 0, px, py, r)
-        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${Math.min(a * 1.1, 0.96)})`)
-        rg.addColorStop(0.25, `rgba(${cr},${cg},${cb},${a * 0.72})`)
-        rg.addColorStop(0.55, `rgba(${cr},${cg},${cb},${a * 0.22})`)
+        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${Math.min(a * 1.15, 0.97)})`)
+        rg.addColorStop(0.22, `rgba(${cr},${cg},${cb},${a * 0.78})`)
+        rg.addColorStop(0.52, `rgba(${cr},${cg},${cb},${a * 0.25})`)
         rg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
         ctx.fillStyle = rg
         ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill()
@@ -373,7 +383,7 @@ onMounted(async () => {
       <div style="background:rgba(15,23,42,0.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 16px;font-family:inherit;font-size:0.75rem;color:#fff;min-width:200px;">
         <div style="font-weight:700;margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase;color:#94a3b8;">Emission Rate</div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <div style="flex:1;height:10px;border-radius:4px;background:linear-gradient(to right,rgb(100,0,255),rgb(255,0,160),rgb(255,50,0),rgb(255,220,0),rgb(255,255,255));"></div>
+          <div style="flex:1;height:10px;border-radius:4px;background:linear-gradient(to right,rgb(0,90,255),rgb(80,0,255),rgb(200,0,220),rgb(255,0,140),rgb(255,80,160),rgb(255,255,255));"></div>
         </div>
         <div style="display:flex;justify-content:space-between;color:#94a3b8;margin-bottom:14px;font-size:0.7rem;">
           <span>Low (${qMin.toFixed(0)} kg/hr)</span><span>High (${qMax.toFixed(0)} kg/hr)</span>
