@@ -76,19 +76,32 @@ function thermalRGB(t) {
   ]
 }
 
-// ── Realistic Gaussian plume simulation ──────────────────────────────────────
-// Inspired by 2-D Stable Fluids (advect + diffuse) but rendered on a 2-D canvas.
+// ── Free-flowing particle system — no polygon clipping ───────────────────────
 // Physics:
-//   • Wind direction from measured wind_direction_deg (meteorological "from" convention)
-//   • Color mapped to Q_kg_hr on a log scale (blue=low, red=high)
-//   • Layer A — static Gaussian concentration backbone (σ grows with √distance)
-//   • Layer B — animated Lagrangian puffs (RK2-like advection + Langevin lateral noise)
-//   • Layer C — pulsing hot source core
-//   • All layers clipped to the real polygon boundary
+//   • Each site spawns N_PARTICLES particles that flow freely from source
+//   • Particles advect downwind and do a Langevin random walk laterally
+//   • σ (particle blob radius) grows as distance^0.75 (power-law atmospheric spread)
+//   • No polygon boundary — particles naturally form a Gaussian plume shape
+//   • plumeLen derived from polygon extent (real measured data) but NOT used as a clip
+//   • Color mapped to Q_kg_hr on log scale (same GHGSat-style colormap)
+
+const N_PARTICLES = 55   // per site; accumulates nicely without polygon
+const LIFETIME    = 5.0  // seconds for a particle to travel full plume length
+
+function initParticlePools(emissions) {
+  // Stagger initial frac so particles are already distributed at t=0 (no burst)
+  return emissions.map(() =>
+    Array.from({ length: N_PARTICLES }, (_, k) => ({
+      frac:   k / N_PARTICLES,          // progress along plume: 0=source, 1=far end
+      latOff: (k / N_PARTICLES - 0.5),  // lateral offset (σ-normalised)
+      latVel: 0,                         // lateral velocity (Langevin state)
+    }))
+  )
+}
 
 function animatePlumes(canvas, map, pane, emissions, qMin, qMax) {
   const ctx = canvas.getContext('2d')
-  const startTime = performance.now()
+  let prevStamp = performance.now()
   let raf
   const mapPaneEl = map.getPane('mapPane')
 
@@ -100,152 +113,133 @@ function animatePlumes(canvas, map, pane, emissions, qMin, qMax) {
       (Math.log(q + 1) - logQMin) / (logQMax - logQMin + 1e-9)))
   }
 
-  function frame() {
-    const t = (performance.now() - startTime) / 1000
-    const W = canvas.width, H = canvas.height
+  // Pre-compute polygon extents (screen-independent; recomputed each frame for zoom)
+  // We store lat/lon bounding box to derive plumeLen at any zoom level
+  const plumeBBoxes = emissions.map(row => {
+    if (!row.plume?.polygons?.length) return null
+    const coords = row.plume.polygons.flat()  // [[lat,lon], ...]
+    return {
+      latMin: Math.min(...coords.map(c => c[0])),
+      latMax: Math.max(...coords.map(c => c[0])),
+      lonMin: Math.min(...coords.map(c => c[1])),
+      lonMax: Math.max(...coords.map(c => c[1])),
+    }
+  })
 
-    // Counteract the map-pane's pan transform so the canvas stays viewport-aligned.
-    // latLngToContainerPoint() then gives correct canvas coordinates.
+  const pools = initParticlePools(emissions)
+
+  function frame(stamp) {
+    const dt = Math.min((stamp - prevStamp) / 1000, 0.05)  // cap at 50ms
+    prevStamp = stamp
+    const t = stamp / 1000
+
+    const W = canvas.width, H = canvas.height
     const pos = L.DomUtil.getPosition(mapPaneEl)
     pane.style.left = (-pos.x) + 'px'
     pane.style.top  = (-pos.y) + 'px'
 
     ctx.clearRect(0, 0, W, H)
 
-    emissions.forEach(row => {
-      if (!row.plume?.polygons?.length) return
-
+    emissions.forEach((row, siteIdx) => {
       const src = map.latLngToContainerPoint(L.latLng(row.latitude, row.longitude))
-      if (src.x < -300 || src.x > W + 300 || src.y < -300 || src.y > H + 300) return
+      if (src.x < -600 || src.x > W + 600 || src.y < -600 || src.y > H + 600) return
 
-      // Color by emission rate Q_kg_hr (log scale)
       const qN = normQ(row.Q_kg_hr)
       const [cr, cg, cb] = thermalRGB(qN)
+      const strength = 0.58 + qN * 0.42
 
-      // Wind: gas moves OPPOSITE to meteorological "from" direction
+      // Wind: gas flows OPPOSITE to meteorological "from" direction
       const windFromDeg = row.wind_direction_deg ?? 225
       const windToDeg   = (windFromDeg + 180) % 360
       const windToRad   = windToDeg * Math.PI / 180
-      // Slow whole-plume meander: ±12° oscillation (real wind direction variance)
-      const meander = 0.21 * Math.sin(t * 0.25 + row.latitude * 4.2)
+      const meander = 0.18 * Math.sin(t * 0.22 + row.latitude * 4.2)
       const effRad  = windToRad + meander
-      // Screen: north = –y, east = +x
-      const nx =  Math.sin(effRad)   // along-wind  x
-      const ny = -Math.cos(effRad)   // along-wind  y  (screen y flips N/S)
-      const lx =  ny                 // lateral     x  (perpendicular)
-      const ly = -nx                 // lateral     y
+      const nx =  Math.sin(effRad)   // along-wind x  (screen)
+      const ny = -Math.cos(effRad)   // along-wind y  (screen, N=−y)
+      const lx =  ny                 // lateral x (perpendicular)
+      const ly = -nx                 // lateral y
 
-      // Project all sub-polygons to screen
-      const allPtSets = row.plume.polygons
-        .map(poly => poly.map(([lat, lon]) => {
-          const p = map.latLngToContainerPoint(L.latLng(lat, lon))
-          return { x: p.x, y: p.y }
-        }))
-        .filter(pts => pts.length >= 3)
-      if (!allPtSets.length) return
-
-      // Bounding box → scale parameters
-      const allPts = allPtSets.flat()
-      const bx0 = Math.min(...allPts.map(p => p.x)), bx1 = Math.max(...allPts.map(p => p.x))
-      const by0 = Math.min(...allPts.map(p => p.y)), by1 = Math.max(...allPts.map(p => p.y))
-      const polyDiag = Math.sqrt((bx1 - bx0) ** 2 + (by1 - by0) ** 2)
-      if (polyDiag < 3) return   // too small at current zoom
-
-      const polyLen  = Math.max(polyDiag, 15)
-      const sig0     = Math.max(polyDiag * 0.06, 3)   // initial σ at source (tighter)
-      const puffLife = 3.5                              // seconds per puff cycle
-      const strength = 0.55 + qN * 0.45               // opacity scale (0.55–1.0)
-
-      // Clip everything to the actual polygon boundary
-      ctx.save()
-      ctx.beginPath()
-      allPtSets.forEach(pts => {
-        ctx.moveTo(pts[0].x, pts[0].y)
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y)
-        ctx.closePath()
-      })
-      ctx.clip()
-
-      // ── Layer A: Subtle static spine — anchors the plume centerline ─────────
-      // Kept deliberately faint so puff motion reads clearly over it.
-      const N_SPINE = 30
-      for (let k = 0; k < N_SPINE; k++) {
-        const frac  = k / (N_SPINE - 1)
-        const dist  = frac * polyLen
-        const sigma = sig0 * (1 + Math.sqrt(frac) * 2.2)
-        const conc  = Math.exp(-frac * 3.0)
-        const lat   = sigma * 0.06 * Math.sin(t * 0.28 + frac * Math.PI * 1.5)
-
-        const bx = src.x + nx * dist + lx * lat
-        const by = src.y + ny * dist + ly * lat
-        const a  = conc * strength * 0.12
-        if (a < 0.005) continue
-
-        const rg = ctx.createRadialGradient(bx, by, 0, bx, by, sigma)
-        rg.addColorStop(0,   `rgba(${cr},${cg},${cb},${Math.min(a, 0.40)})`)
-        rg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${a * 0.35})`)
-        rg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
-        ctx.fillStyle = rg
-        ctx.beginPath(); ctx.arc(bx, by, sigma, 0, Math.PI * 2); ctx.fill()
+      // plumeLen: pixel length of real detected plume at current zoom
+      // Falls back to wind-speed estimate if no polygon
+      let plumeLen = 80
+      const bb = plumeBBoxes[siteIdx]
+      if (bb) {
+        const p0 = map.latLngToContainerPoint(L.latLng(bb.latMin, bb.lonMin))
+        const p1 = map.latLngToContainerPoint(L.latLng(bb.latMax, bb.lonMax))
+        plumeLen = Math.max(Math.hypot(p1.x - p0.x, p1.y - p0.y), 20)
+      } else {
+        // Approximate: pixels per metre × wind_speed × lifetime
+        const pm = map.latLngToContainerPoint(L.latLng(row.latitude + 0.001, row.longitude))
+        const pixPerM = Math.abs(pm.y - src.y) / 111   // 0.001° ≈ 111m
+        plumeLen = Math.max((row.U_10_ms ?? 3) * LIFETIME * pixPerM, 40)
       }
+      if (plumeLen < 4) return
 
-      // ── Layer B: Lagrangian puffs (source-over, tuned alpha) ─────────────────
-      // With source-over, N overlapping puffs combine as: 1-(1-a)^N.
-      // Near source ~10 puffs overlap at alpha≈0.28 → combined ≈ 0.95 (opaque).
-      // Far end  ~10 puffs at alpha≈0.28*exp(-2.8)≈0.02 → combined ≈ 0.20 (faint).
-      // This naturally produces a dense core that fades to wispy tail with clear motion.
-      const N_PUFFS = 110
-      for (let k = 0; k < N_PUFFS; k++) {
-        const phase = k / N_PUFFS
-        const frac  = (t / puffLife + phase) % 1    // 0 = born at source, 1 = far end
-        const dist  = frac * polyLen
-        // σ grows with √frac (Fickian diffusion) — tight at source, wide at far end
-        const sigma = sig0 * (0.28 + Math.sqrt(frac) * 2.8)
+      // σ at source: tight plume neck, grows as power law (atmospheric turbulence)
+      const sig0 = Math.max(plumeLen * 0.05, 3)
 
-        // Lateral turbulence — three eddy scales
-        const lat = sigma * (
-          0.55 * Math.sin(t * 0.20 + k * 1.618 + phase * 3.14) +
-          0.28 * Math.sin(t * 0.85 + k * 2.718 + frac  * 6.28) +
-          0.12 * Math.sin(t * 2.50 + k * 4.130 + frac  * 9.42)
-        )
+      // ── Update + draw particles ────────────────────────────────────────────
+      const particles = pools[siteIdx]
+      particles.forEach(p => {
+        // Advance along plume; wrap back to source when complete
+        p.frac += dt / LIFETIME
+        if (p.frac >= 1) {
+          p.frac  -= 1
+          p.latOff = (Math.random() - 0.5) * 0.4
+          p.latVel = (Math.random() - 0.5) * 0.15
+        }
 
-        const bx = src.x + nx * dist + lx * lat
-        const by = src.y + ny * dist + ly * lat
+        // Langevin lateral dynamics: random turbulent forcing + restoring damping
+        // Produces smooth correlated random walk (not jittery white noise)
+        const force  = (Math.random() - 0.5) * 1.2
+        p.latVel = p.latVel * 0.88 + force * dt
+        p.latOff += p.latVel
 
-        const conc    = Math.exp(-frac * 2.8)   // steep decay: dense source → wispy tail
-        const fadeIn  = Math.min(frac / 0.03, 1)
-        const fadeOut = frac > 0.78 ? Math.max(0, 1 - (frac - 0.78) / 0.22) : 1
-        const a = conc * fadeIn * fadeOut * strength * 0.28   // accumulates nicely at source
-        if (a < 0.005) continue
+        const frac = p.frac
+        const dist = frac * plumeLen
 
-        const r  = sigma * 1.0
-        const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
-        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${Math.min(a, 0.82)})`)
-        rg.addColorStop(0.35, `rgba(${cr},${cg},${cb},${a * 0.55})`)
-        rg.addColorStop(0.70, `rgba(${cr},${cg},${cb},${a * 0.18})`)
+        // σ grows as power law — tighter near source, wide plume at far end
+        const sigma = sig0 * (0.4 + Math.pow(frac, 0.72) * 4.0)
+
+        // Lateral position in pixels (latOff is σ-normalised)
+        const latPx = p.latOff * sigma * 0.65
+
+        const px = src.x + nx * dist + lx * latPx
+        const py = src.y + ny * dist + ly * latPx
+
+        // Concentration: dense at source, dissipates with distance + fade in/out
+        const conc    = Math.exp(-frac * 2.6)
+        const fadeIn  = Math.min(frac / 0.025, 1)
+        const fadeOut = frac > 0.80 ? Math.max(0, 1 - (frac - 0.80) / 0.20) : 1
+        const a = conc * fadeIn * fadeOut * strength * 0.30
+        if (a < 0.004) return
+
+        const r  = sigma * 0.95
+        const rg = ctx.createRadialGradient(px, py, 0, px, py, r)
+        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${Math.min(a, 0.88)})`)
+        rg.addColorStop(0.38, `rgba(${cr},${cg},${cb},${a * 0.52})`)
+        rg.addColorStop(0.72, `rgba(${cr},${cg},${cb},${a * 0.14})`)
         rg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
         ctx.fillStyle = rg
-        ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
-      }
+        ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill()
+      })
 
-      // ── Layer C: Hot pulsing source core ──────────────────────────────────
+      // ── Pulsing source core ────────────────────────────────────────────────
       const pulse = 0.80 + 0.20 * Math.sin(t * 2.8 + row.latitude * 6)
-      const srcR  = Math.max(sig0 * 1.4, 5)
+      const srcR  = Math.max(sig0 * 1.3, 4)
       const sg = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, srcR)
-      sg.addColorStop(0,    `rgba(255,252,220,${0.88 * pulse})`)
-      sg.addColorStop(0.28, `rgba(${cr},${cg},${cb},${0.65 * pulse})`)
-      sg.addColorStop(0.65, `rgba(${cr},${cg},${cb},${0.18 * pulse})`)
+      sg.addColorStop(0,    `rgba(255,252,220,${0.90 * pulse})`)
+      sg.addColorStop(0.30, `rgba(${cr},${cg},${cb},${0.68 * pulse})`)
+      sg.addColorStop(0.65, `rgba(${cr},${cg},${cb},${0.20 * pulse})`)
       sg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
       ctx.fillStyle = sg
       ctx.beginPath(); ctx.arc(src.x, src.y, srcR, 0, Math.PI * 2); ctx.fill()
-
-      ctx.restore()
     })
 
     raf = requestAnimationFrame(frame)
   }
 
-  frame()
+  raf = requestAnimationFrame(frame)
   return () => cancelAnimationFrame(raf)
 }
 
