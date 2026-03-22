@@ -52,9 +52,10 @@ const mapEl   = ref(null)
 const summary = ref(null)
 const loading = ref(true)
 
-// ── Gas plume colormap — blue → violet → magenta → pink → white ──────────────
+// ── Gas plume colormap — blue → violet → magenta → pink → vivid red ──────────
 // Every stop is a color that CANNOT appear in tan/green/brown satellite terrain.
 // No orange, no yellow, no green — those all blend with soil and vegetation.
+// Red endpoint signals danger and contrasts strongly against earth-tone backgrounds.
 function thermalRGB(t) {
   t = Math.max(0, Math.min(1, t))
   const stops = [
@@ -62,8 +63,8 @@ function thermalRGB(t) {
     [80,   0, 255],  // blue-violet
     [200,  0, 220],  // vivid violet
     [255,  0, 140],  // hot magenta-pink
-    [255, 80, 160],  // bright pink
-    [255, 255, 255], // pure white       (peak)
+    [255,  0,  60],  // hot red-pink
+    [200,   0,  0],  // vivid red        (peak)
   ]
   const n   = stops.length - 1
   const idx = Math.min(Math.floor(t * n), n - 1)
@@ -383,7 +384,7 @@ onMounted(async () => {
       <div style="background:rgba(15,23,42,0.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 16px;font-family:inherit;font-size:0.75rem;color:#fff;min-width:200px;">
         <div style="font-weight:700;margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase;color:#94a3b8;">Emission Rate</div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <div style="flex:1;height:10px;border-radius:4px;background:linear-gradient(to right,rgb(0,90,255),rgb(80,0,255),rgb(200,0,220),rgb(255,0,140),rgb(255,80,160),rgb(255,255,255));"></div>
+          <div style="flex:1;height:10px;border-radius:4px;background:linear-gradient(to right,rgb(0,90,255),rgb(80,0,255),rgb(200,0,220),rgb(255,0,140),rgb(255,0,60),rgb(200,0,0));"></div>
         </div>
         <div style="display:flex;justify-content:space-between;color:#94a3b8;margin-bottom:14px;font-size:0.7rem;">
           <span>Low (${qMin.toFixed(0)} kg/hr)</span><span>High (${qMax.toFixed(0)} kg/hr)</span>
