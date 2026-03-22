@@ -87,8 +87,8 @@ onMounted(async () => {
   const confMax = Math.max(...confs)
 
   const map = L.map(mapEl.value, {
-    center: [31.949, -102.517],
-    zoom: 9,
+    center: [32.33, -101.81],
+    zoom: 12,
     scrollWheelZoom: true,
   })
 

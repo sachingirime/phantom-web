@@ -15,7 +15,7 @@
         <div class="form-card">
           <form
             v-if="!submitted"
-            action="https://formspree.io/f/xanydvgd"
+            action="https://formspree.io/f/xlgpkzaz"
             method="POST"
             @submit.prevent="handleSubmit"
           >
@@ -123,7 +123,7 @@ async function handleSubmit() {
   loading.value = true
   error.value = ''
   try {
-    const res = await fetch('https://formspree.io/f/xanydvgd', {
+    const res = await fetch('https://formspree.io/f/xlgpkzaz', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({
