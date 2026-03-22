@@ -52,18 +52,17 @@ const mapEl   = ref(null)
 const summary = ref(null)
 const loading = ref(true)
 
-// ── Gas plume colormap — plasma-style for max contrast on satellite imagery ──
-// deep indigo → violet → magenta → orange-red → amber → warm white
-// Avoids green/cyan/yellow which vanish against vegetation and tan soil.
+// ── Gas plume colormap — electric neon hazard ────────────────────────────────
+// violet → hot magenta → vivid orange → bright gold → white
+// Fully saturated — pops hard on any satellite terrain (green, tan, water).
 function thermalRGB(t) {
   t = Math.max(0, Math.min(1, t))
   const stops = [
-    [50,   0, 160],   // deep indigo     (low — pops on any terrain)
-    [130,  0, 200],   // violet
-    [210,  0, 150],   // magenta
-    [255,  55,  10],  // orange-red
-    [255, 185,   0],  // amber
-    [255, 255, 210],  // warm white      (peak — bright, clearly visible)
+    [100,   0, 255],  // electric violet  (low)
+    [255,   0, 160],  // hot magenta
+    [255,  50,   0],  // vivid orange-red
+    [255, 220,   0],  // bright gold
+    [255, 255, 255],  // pure white       (peak)
   ]
   const n   = stops.length - 1
   const idx = Math.min(Math.floor(t * n), n - 1)
@@ -211,26 +210,27 @@ function animatePlumes(canvas, map, pane, emissions, qMin, qMax) {
         const conc    = Math.exp(-frac * 2.6)
         const fadeIn  = Math.min(frac / 0.025, 1)
         const fadeOut = frac > 0.80 ? Math.max(0, 1 - (frac - 0.80) / 0.20) : 1
-        const a = conc * fadeIn * fadeOut * strength * 0.30
+        const a = conc * fadeIn * fadeOut * strength * 0.42
         if (a < 0.004) return
 
-        const r  = sigma * 0.95
+        const r  = sigma * 0.90
+        // Sharp core gradient: punchy opaque center, tight falloff → vivid not washed out
         const rg = ctx.createRadialGradient(px, py, 0, px, py, r)
-        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${Math.min(a, 0.88)})`)
-        rg.addColorStop(0.38, `rgba(${cr},${cg},${cb},${a * 0.52})`)
-        rg.addColorStop(0.72, `rgba(${cr},${cg},${cb},${a * 0.14})`)
+        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${Math.min(a * 1.1, 0.96)})`)
+        rg.addColorStop(0.25, `rgba(${cr},${cg},${cb},${a * 0.72})`)
+        rg.addColorStop(0.55, `rgba(${cr},${cg},${cb},${a * 0.22})`)
         rg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
         ctx.fillStyle = rg
         ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill()
       })
 
       // ── Pulsing source core ────────────────────────────────────────────────
-      const pulse = 0.80 + 0.20 * Math.sin(t * 2.8 + row.latitude * 6)
-      const srcR  = Math.max(sig0 * 1.3, 4)
+      const pulse = 0.78 + 0.22 * Math.sin(t * 2.8 + row.latitude * 6)
+      const srcR  = Math.max(sig0 * 1.5, 5)
       const sg = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, srcR)
-      sg.addColorStop(0,    `rgba(255,252,220,${0.90 * pulse})`)
-      sg.addColorStop(0.30, `rgba(${cr},${cg},${cb},${0.68 * pulse})`)
-      sg.addColorStop(0.65, `rgba(${cr},${cg},${cb},${0.20 * pulse})`)
+      sg.addColorStop(0,    `rgba(255,255,255,${0.98 * pulse})`)   // pure white core
+      sg.addColorStop(0.22, `rgba(${cr},${cg},${cb},${0.85 * pulse})`)
+      sg.addColorStop(0.55, `rgba(${cr},${cg},${cb},${0.30 * pulse})`)
       sg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
       ctx.fillStyle = sg
       ctx.beginPath(); ctx.arc(src.x, src.y, srcR, 0, Math.PI * 2); ctx.fill()
@@ -373,7 +373,7 @@ onMounted(async () => {
       <div style="background:rgba(15,23,42,0.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 16px;font-family:inherit;font-size:0.75rem;color:#fff;min-width:200px;">
         <div style="font-weight:700;margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase;color:#94a3b8;">Emission Rate</div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <div style="flex:1;height:10px;border-radius:4px;background:linear-gradient(to right,rgb(50,0,160),rgb(130,0,200),rgb(210,0,150),rgb(255,55,10),rgb(255,185,0),rgb(255,255,210));"></div>
+          <div style="flex:1;height:10px;border-radius:4px;background:linear-gradient(to right,rgb(100,0,255),rgb(255,0,160),rgb(255,50,0),rgb(255,220,0),rgb(255,255,255));"></div>
         </div>
         <div style="display:flex;justify-content:space-between;color:#94a3b8;margin-bottom:14px;font-size:0.7rem;">
           <span>Low (${qMin.toFixed(0)} kg/hr)</span><span>High (${qMax.toFixed(0)} kg/hr)</span>
