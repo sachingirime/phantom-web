@@ -152,9 +152,9 @@ function animatePlumes(canvas, map, pane, emissions, qMin, qMax) {
       if (polyDiag < 3) return   // too small at current zoom
 
       const polyLen  = Math.max(polyDiag, 15)
-      const sig0     = Math.max(polyDiag * 0.07, 4)   // initial σ at source
-      const puffLife = 4.0                              // seconds per puff cycle
-      const strength = 0.65 + qN * 0.35               // opacity multiplier (0.65–1.0)
+      const sig0     = Math.max(polyDiag * 0.06, 3)   // initial σ at source (tighter)
+      const puffLife = 3.5                              // seconds per puff cycle
+      const strength = 0.55 + qN * 0.45               // opacity scale (0.55–1.0)
 
       // Clip everything to the actual polygon boundary
       ctx.save()
@@ -166,81 +166,88 @@ function animatePlumes(canvas, map, pane, emissions, qMin, qMax) {
       })
       ctx.clip()
 
-      // ── Layer A: Dense concentration backbone ───────────────────────────────
-      const N_SPINE = 42
+      // Use 'screen' blending: overlapping puffs near source accumulate naturally
+      // without blowing out to white. Far-end sparse puffs stay faint.
+      ctx.globalCompositeOperation = 'screen'
+
+      // ── Layer A: Ghost spine — almost invisible, just anchors the centerline ─
+      const N_SPINE = 30
       for (let k = 0; k < N_SPINE; k++) {
         const frac  = k / (N_SPINE - 1)
         const dist  = frac * polyLen
-        const sigma = sig0 * (1 + Math.sqrt(frac) * 2.5)
-        const conc  = Math.exp(-frac * 2.8)
-        // Tight lateral meander — narrow coherent spine like real plume backbone
-        const lat   = sigma * 0.08 * Math.sin(t * 0.28 + frac * Math.PI * 1.5)
+        const sigma = sig0 * (1 + Math.sqrt(frac) * 2.2)
+        const conc  = Math.exp(-frac * 3.5)
+        const lat   = sigma * 0.06 * Math.sin(t * 0.28 + frac * Math.PI * 1.5)
 
         const bx = src.x + nx * dist + lx * lat
         const by = src.y + ny * dist + ly * lat
-        const a  = conc * strength * 0.28
-        if (a < 0.006) continue
+        const a  = conc * strength * 0.07    // very faint — motion layer does the work
+        if (a < 0.004) continue
 
         const rg = ctx.createRadialGradient(bx, by, 0, bx, by, sigma)
-        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${Math.min(a, 0.82)})`)
-        rg.addColorStop(0.45, `rgba(${cr},${cg},${cb},${a * 0.45})`)
-        rg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
+        rg.addColorStop(0,   `rgba(${cr},${cg},${cb},${Math.min(a, 0.25)})`)
+        rg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${a * 0.3})`)
+        rg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
         ctx.fillStyle = rg
         ctx.beginPath(); ctx.arc(bx, by, sigma, 0, Math.PI * 2); ctx.fill()
       }
 
-      // ── Layer B: Meandering Lagrangian puffs ─────────────────────────────
-      // Multi-scale turbulent lateral displacement (three nested eddy scales):
-      //   Large  (~25 s period): whole-plume meander visible as snaking motion
-      //   Medium (~7 s period) : inter-puff mixing, plume width variation
-      //   Small  (~2 s period) : fast turbulent shredding near source
-      // σ grows with √frac (Fickian diffusion). Each puff has a unique phase
-      // seeded by its index k so paths don't overlap.
-      const N_PUFFS = 80
+      // ── Layer B: Lagrangian puffs — low per-puff opacity, screen-blended ─────
+      // With 'screen' mode, many puffs at source build up to a bright dense core,
+      // while sparse puffs at the far end stay faint → motion is clearly visible.
+      //
+      // Three turbulent eddy scales give realistic lateral meandering:
+      //   Large  (~28 s): whole-plume snake, visible at all zooms
+      //   Medium (~7 s) : inter-puff spread, plume width variation
+      //   Small  (~2 s) : fast shredding near source
+      const N_PUFFS = 110
       for (let k = 0; k < N_PUFFS; k++) {
         const phase = k / N_PUFFS
-        const frac  = (t / puffLife + phase) % 1
+        const frac  = (t / puffLife + phase) % 1    // 0 = just born at source, 1 = far end
         const dist  = frac * polyLen
-        const sigma = sig0 * (0.35 + Math.sqrt(frac) * 2.5)
+        // σ grows with √frac (Fickian diffusion) — tight at source, wide at far end
+        const sigma = sig0 * (0.28 + Math.sqrt(frac) * 2.8)
 
-        // Three-scale lateral turbulence — tightened amplitudes for denser, coherent plume
+        // Lateral turbulence: amplitude scales with local σ so width grows naturally
         const lat = sigma * (
-          0.72 * Math.sin(t * 0.22 + k * 1.618 + phase * 3.14) +   // large slow eddy
-          0.36 * Math.sin(t * 0.90 + k * 2.718 + frac  * 6.28) +   // medium eddy
-          0.14 * Math.sin(t * 2.60 + k * 4.130 + frac  * 9.42)     // small fast eddy
+          0.55 * Math.sin(t * 0.20 + k * 1.618 + phase * 3.14) +
+          0.28 * Math.sin(t * 0.85 + k * 2.718 + frac  * 6.28) +
+          0.12 * Math.sin(t * 2.50 + k * 4.130 + frac  * 9.42)
         )
 
         const bx = src.x + nx * dist + lx * lat
         const by = src.y + ny * dist + ly * lat
 
-        const conc    = Math.exp(-frac * 1.6)
-        const fadeIn  = Math.min(frac / 0.04, 1)
-        const fadeOut = frac > 0.82 ? Math.max(0, 1 - (frac - 0.82) / 0.18) : 1
-        const a = conc * fadeIn * fadeOut * strength * 0.62
-        if (a < 0.006) continue
+        // Steep concentration decay: source dense, far end faint → motion visible
+        const conc    = Math.exp(-frac * 2.8)
+        const fadeIn  = Math.min(frac / 0.03, 1)
+        const fadeOut = frac > 0.78 ? Math.max(0, 1 - (frac - 0.78) / 0.22) : 1
+        // Low per-puff alpha — screen blending accumulates these
+        const a = conc * fadeIn * fadeOut * strength * 0.18
+        if (a < 0.004) continue
 
-        const r  = sigma * 1.1
+        const r  = sigma * 1.0
         const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
-        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${Math.min(a, 0.95)})`)
-        rg.addColorStop(0.32, `rgba(${cr},${cg},${cb},${a * 0.62})`)
-        rg.addColorStop(0.68, `rgba(${cr},${cg},${cb},${a * 0.20})`)
+        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${Math.min(a, 0.55)})`)
+        rg.addColorStop(0.35, `rgba(${cr},${cg},${cb},${a * 0.55})`)
+        rg.addColorStop(0.70, `rgba(${cr},${cg},${cb},${a * 0.18})`)
         rg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
         ctx.fillStyle = rg
         ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
       }
 
       // ── Layer C: Hot pulsing source core ──────────────────────────────────
-      const pulse = 0.82 + 0.18 * Math.sin(t * 2.8 + row.latitude * 6)
-      const srcR  = Math.max(sig0 * 1.3, 6)
+      const pulse = 0.80 + 0.20 * Math.sin(t * 2.8 + row.latitude * 6)
+      const srcR  = Math.max(sig0 * 1.4, 5)
       const sg = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, srcR)
-      sg.addColorStop(0,    `rgba(255,252,220,${0.92 * pulse})`)
-      sg.addColorStop(0.30, `rgba(${cr},${cg},${cb},${0.72 * pulse})`)
-      sg.addColorStop(0.65, `rgba(${cr},${cg},${cb},${0.20 * pulse})`)
+      sg.addColorStop(0,    `rgba(255,252,220,${0.88 * pulse})`)
+      sg.addColorStop(0.28, `rgba(${cr},${cg},${cb},${0.65 * pulse})`)
+      sg.addColorStop(0.65, `rgba(${cr},${cg},${cb},${0.18 * pulse})`)
       sg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
       ctx.fillStyle = sg
       ctx.beginPath(); ctx.arc(src.x, src.y, srcR, 0, Math.PI * 2); ctx.fill()
 
-      ctx.restore()
+      ctx.restore()   // also restores globalCompositeOperation to 'source-over'
     })
 
     raf = requestAnimationFrame(frame)
