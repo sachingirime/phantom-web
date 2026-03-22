@@ -131,137 +131,123 @@ function animatePlumes(canvas, map, emissions, confMin, confMax) {
       const dx = cx - src.x, dy = cy - src.y
       const pixDist = Math.sqrt(dx * dx + dy * dy)
 
-      // Minimum visible effect size — scales with emission strength
-      // At low zoom (sub-pixel polygons), we still draw a visible plume
-      const MIN_LEN  = 28 + strength * 50   // 28–78 px
-      const MIN_WIDE = 14 + strength * 28   // 14–42 px
-
-      const effectLen  = Math.max(pixDist, MIN_LEN)
-      const effectWide = Math.max(Math.sqrt(bestArea) * 0.3, MIN_WIDE)
-
       // Normalised wind direction (fallback: upward if polygon is co-located)
       const nx = pixDist > 0.5 ? dx / pixDist : 0
       const ny = pixDist > 0.5 ? dy / pixDist : -1
       const px = -ny, py = nx   // perpendicular
 
-      const cycleSec = Math.max(effectLen / (windPx + 0.1), 0.5)
-      const phase    = (t / cycleSec) % 1
-      const turbR    = Math.max(effectWide * 0.45, 10)
-      const glowR    = 10 + strength * 18
-
-      // Drawing rect: covers full plume extent + lateral turbulence + source glow.
-      // Works for any wind direction angle.
-      const perpPad  = turbR * 4 + glowR          // max perpendicular (cross-wind) extent
-      const tailX    = src.x + nx * effectLen * 2.2   // furthest downstream point
-      const tailY    = src.y + ny * effectLen * 2.2
-      const drawX    = Math.min(src.x, tailX) - perpPad
-      const drawY    = Math.min(src.y, tailY) - perpPad
-      const drawW    = Math.abs(tailX - src.x) + perpPad * 2
-      const drawH    = Math.abs(tailY - src.y) + perpPad * 2
-
-      // ── When polygon is too small on-screen: just draw a radial glow ─────
+      // ── When polygon is too small on-screen (zoomed out): small glow only ──
       const polyDiag = Math.sqrt(bestArea)
       if (polyDiag < 8) {
         const r = 4 + strength * 7
         ctx.save()
         ctx.globalCompositeOperation = 'source-over'
-        const sg = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, r)
-        sg.addColorStop(0,   `rgba(${cr},${cg},${cb},0.9)`)
-        sg.addColorStop(0.5, `rgba(${cr},${cg},${cb},0.3)`)
-        sg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
-        ctx.fillStyle = sg
-        ctx.fillRect(src.x - r, src.y - r, r * 2, r * 2)
+        const sg0 = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, r)
+        sg0.addColorStop(0,   `rgba(${cr},${cg},${cb},0.9)`)
+        sg0.addColorStop(0.5, `rgba(${cr},${cg},${cb},0.3)`)
+        sg0.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
+        ctx.fillStyle = sg0
+        ctx.beginPath(); ctx.arc(src.x, src.y, r, 0, Math.PI * 2); ctx.fill()
         ctx.restore()
-        return   // skip full animation — no unclipped drawRect bleeding
+        return
       }
 
-      // ── Clip ALWAYS to the largest polygon (polygon is >= 8px on screen) ─
+      // ── SMOKE SIMULATION ──────────────────────────────────────────────────
+      // Clip to UNION of ALL polygons so smoke never bleeds outside boundaries.
       ctx.save()
+      ctx.globalCompositeOperation = 'source-over'
       ctx.beginPath()
-      ctx.moveTo(bestPts[0].x, bestPts[0].y)
-      for (let i = 1; i < bestPts.length; i++) ctx.lineTo(bestPts[i].x, bestPts[i].y)
-      ctx.closePath()
-      ctx.clip()
+      allPtSets.forEach(pts => {
+        ctx.moveTo(pts[0].x, pts[0].y)
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y)
+        ctx.closePath()
+      })
+      ctx.clip()  // union clip — all sub-polygons in one path
 
-      // ── Base tint fill (clipped) ───────────────────────────────────────────
-      ctx.globalCompositeOperation = 'source-over'
-      ctx.fillStyle = `rgba(${cr},${cg},${cb},${0.12 + strength * 0.08})`
-      ctx.fillRect(drawX, drawY, drawW, drawH)
+      // Travel length for puffs: actual screen distance to polygon centroid,
+      // scaled to polygon diagonal so puffs fill the whole boundary.
+      const polyLen  = Math.max(polyDiag * 0.9, 30)
+      const cycleSec = Math.max(polyLen / (windPx + 0.1), 0.6)
 
-      // ── Flowing puffs along wind axis (clipped, fewer passes, lower alpha) ─
-      ctx.globalCompositeOperation = 'source-over'
-      const PASSES = 4
-      for (let pass = 0; pass < PASSES; pass++) {
-        const pPhase = (phase + pass / PASSES) % 1
-        const travel = effectLen * 1.55
-        const ox = src.x + nx * (travel * pPhase - effectLen * 0.05)
-        const oy = src.y + ny * (travel * pPhase - effectLen * 0.05)
-        const ex = ox + nx * effectLen * 0.65
-        const ey = oy + ny * effectLen * 0.65
-
-        const env   = Math.sin(pPhase * Math.PI)
-        const alpha = env * (0.38 + strength * 0.18)
-
-        const g = ctx.createLinearGradient(ox, oy, ex, ey)
-        g.addColorStop(0,    `rgba(${cr},${cg},${cb},0)`)
-        g.addColorStop(0.08, `rgba(${cr},${cg},${cb},${alpha * 0.5})`)
-        g.addColorStop(0.30, `rgba(${cr},${cg},${cb},${alpha})`)
-        g.addColorStop(0.55, `rgba(${cr},${cg},${cb},${alpha * 0.9})`)
-        g.addColorStop(0.85, `rgba(${cr},${cg},${cb},${alpha * 0.25})`)
-        g.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
-        ctx.fillStyle = g
-        ctx.fillRect(drawX, drawY, drawW, drawH)
+      // ── Background wisps — large slow transparent rolls ────────────────────
+      const N_WISPS = 5
+      for (let k = 0; k < N_WISPS; k++) {
+        const kP = ((t / (cycleSec * 2.2)) + k / N_WISPS) % 1
+        const lat = polyLen * 0.28 * Math.sin(t * 0.45 + k * 2.09)
+        const bx  = src.x + nx * polyLen * kP + px * lat
+        const by  = src.y + ny * polyLen * kP + py * lat
+        const r   = (14 + strength * 20) * (0.55 + kP * 1.1)
+        const a   = Math.sin(kP * Math.PI) * (0.07 + strength * 0.06)
+        if (a < 0.005) continue
+        const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
+        rg.addColorStop(0,   `rgba(${cr},${cg},${cb},${a})`)
+        rg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${a * 0.45})`)
+        rg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
+        ctx.fillStyle = rg
+        ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
       }
 
-      // ── Turbulence blobs — lateral dispersion (clipped) ───────────────────
-      const BLOBS = 6
-      for (let k = 0; k < BLOBS; k++) {
-        const bPhase = ((t * 0.5 + k * 0.91) / cycleSec) % 1
-        const bTx    = src.x + nx * effectLen * bPhase
-        const bTy    = src.y + ny * effectLen * bPhase
-        const spread = turbR * (0.5 + bPhase * 1.4)
-        const lat    = Math.sin(t * (0.65 + k * 0.25) + k * 2.1) * spread
-        const bx2    = bTx + px * lat
-        const by2    = bTy + py * lat
+      // ── Smoke puffs — main particle stream ────────────────────────────────
+      // Each puff is a soft radial gradient circle (arc), not a fillRect.
+      // Two-frequency lateral wobble gives natural billowing motion.
+      const N_PUFFS = 22
+      for (let k = 0; k < N_PUFFS; k++) {
+        const kP = ((t / cycleSec) + k / N_PUFFS) % 1
 
-        const bA = (0.18 + strength * 0.15) * (1 - bPhase * 0.35)
-        const rg = ctx.createRadialGradient(bx2, by2, 0, bx2, by2, turbR * (1.2 + bPhase * 0.8))
-        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${bA})`)
-        rg.addColorStop(0.40, `rgba(${cr},${cg},${cb},${bA * 0.65})`)
-        rg.addColorStop(0.75, `rgba(${cr},${cg},${cb},${bA * 0.2})`)
+        // Two-frequency lateral oscillation → organic billowing
+        const latAmp = polyLen * 0.20
+        const lat = latAmp * (
+          0.60 * Math.sin(t * 0.75 + k * 1.618 + kP * Math.PI) +
+          0.40 * Math.sin(t * 1.55 + k * 2.937 + kP * Math.PI * 1.7)
+        )
+        const bx = src.x + nx * polyLen * kP + px * lat
+        const by = src.y + ny * polyLen * kP + py * lat
+
+        // Radius: small near source, expands as puff travels (smoke disperses)
+        const baseR = 4 + strength * 9
+        const r     = baseR * (0.35 + kP * 1.8)
+
+        // Alpha envelope: quick fade-in (0–10%), plateau, slow fade-out (65–100%)
+        const fadeIn  = Math.min(kP / 0.10, 1)
+        const fadeOut = kP > 0.65 ? Math.max(0, 1 - (kP - 0.65) / 0.35) : 1
+        const a       = fadeIn * fadeOut * (0.20 + strength * 0.14)
+        if (a < 0.008) continue
+
+        const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
+        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${a})`)
+        rg.addColorStop(0.38, `rgba(${cr},${cg},${cb},${a * 0.72})`)
+        rg.addColorStop(0.72, `rgba(${cr},${cg},${cb},${a * 0.28})`)
         rg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
         ctx.fillStyle = rg
-        ctx.fillRect(drawX, drawY, drawW, drawH)
+        ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
       }
 
-      // ── Pulsing hot source glow (clipped) ─────────────────────────────────
-      const pulse = 0.7 + 0.3 * Math.sin(t * 3.1 + row.latitude * 10)
-      ctx.globalCompositeOperation = 'source-over'
+      // ── Pulsing source hot-spot glow ───────────────────────────────────────
+      const pulse = 0.72 + 0.28 * Math.sin(t * 2.6 + row.latitude * 10)
+      const glowR  = 6 + strength * 11
       const sg = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, glowR)
-      sg.addColorStop(0,   `rgba(255,255,200,${0.7 * pulse})`)
-      sg.addColorStop(0.2, `rgba(${cr},${cg},${cb},${0.6 * pulse})`)
-      sg.addColorStop(0.6, `rgba(${cr},${cg},${cb},${0.25 * pulse})`)
+      sg.addColorStop(0,   `rgba(255,255,210,${0.65 * pulse})`)
+      sg.addColorStop(0.3, `rgba(${cr},${cg},${cb},${0.50 * pulse})`)
+      sg.addColorStop(0.7, `rgba(${cr},${cg},${cb},${0.18 * pulse})`)
       sg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
       ctx.fillStyle = sg
-      ctx.fillRect(src.x - glowR, src.y - glowR, glowR * 2, glowR * 2)
+      ctx.beginPath(); ctx.arc(src.x, src.y, glowR, 0, Math.PI * 2); ctx.fill()
 
-      ctx.restore()  // removes clip
+      ctx.restore()  // removes union clip
 
-      // ── Plume boundary outlines — stroke only, no fill (outside clip) ─────
+      // ── Plume boundary outlines — stroke only, drawn outside clip ─────────
       ctx.globalCompositeOperation = 'source-over'
-      const outlinePulse = 0.55 + 0.35 * Math.sin(t * 1.8 + row.latitude * 5)
+      const outlinePulse = 0.5 + 0.4 * Math.sin(t * 1.6 + row.latitude * 5)
       allPtSets.forEach(pts => {
         ctx.beginPath()
         ctx.moveTo(pts[0].x, pts[0].y)
         for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y)
         ctx.closePath()
-        // Outer glow stroke
         ctx.lineWidth = 3
-        ctx.strokeStyle = `rgba(${cr},${cg},${cb},${0.2 * outlinePulse})`
+        ctx.strokeStyle = `rgba(${cr},${cg},${cb},${0.18 * outlinePulse})`
         ctx.stroke()
-        // Inner crisp stroke
         ctx.lineWidth = 1.2
-        ctx.strokeStyle = `rgba(${cr},${cg},${cb},${0.75 * outlinePulse})`
+        ctx.strokeStyle = `rgba(${cr},${cg},${cb},${0.70 * outlinePulse})`
         ctx.stroke()
       })
     })
