@@ -52,18 +52,18 @@ const mapEl   = ref(null)
 const summary = ref(null)
 const loading = ref(true)
 
-// ── Gas plume colormap — GHGSat/AVIRIS-NG scientific style ──────────────────
-// deep navy → electric blue → cyan → yellow → orange → red → white
+// ── Gas plume colormap — plasma-style for max contrast on satellite imagery ──
+// deep indigo → violet → magenta → orange-red → amber → warm white
+// Avoids green/cyan/yellow which vanish against vegetation and tan soil.
 function thermalRGB(t) {
   t = Math.max(0, Math.min(1, t))
   const stops = [
-    [10,   0, 110],   // deep navy      (low enhancement)
-    [0,   55, 230],   // electric blue
-    [0,  200, 255],   // cyan
-    [60, 255, 180],   // cyan-green
-    [255, 230,   0],  // yellow
-    [255,  70,   0],  // orange-red
-    [255, 255, 255],  // white           (peak enhancement)
+    [50,   0, 160],   // deep indigo     (low — pops on any terrain)
+    [130,  0, 200],   // violet
+    [210,  0, 150],   // magenta
+    [255,  55,  10],  // orange-red
+    [255, 185,   0],  // amber
+    [255, 255, 210],  // warm white      (peak — bright, clearly visible)
   ]
   const n   = stops.length - 1
   const idx = Math.min(Math.floor(t * n), n - 1)
@@ -373,7 +373,7 @@ onMounted(async () => {
       <div style="background:rgba(15,23,42,0.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 16px;font-family:inherit;font-size:0.75rem;color:#fff;min-width:200px;">
         <div style="font-weight:700;margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase;color:#94a3b8;">Emission Rate</div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <div style="flex:1;height:10px;border-radius:4px;background:linear-gradient(to right,rgb(10,0,110),rgb(0,55,230),rgb(0,200,255),rgb(60,255,180),rgb(255,230,0),rgb(255,70,0),rgb(255,255,255));"></div>
+          <div style="flex:1;height:10px;border-radius:4px;background:linear-gradient(to right,rgb(50,0,160),rgb(130,0,200),rgb(210,0,150),rgb(255,55,10),rgb(255,185,0),rgb(255,255,210));"></div>
         </div>
         <div style="display:flex;justify-content:space-between;color:#94a3b8;margin-bottom:14px;font-size:0.7rem;">
           <span>Low (${qMin.toFixed(0)} kg/hr)</span><span>High (${qMax.toFixed(0)} kg/hr)</span>
