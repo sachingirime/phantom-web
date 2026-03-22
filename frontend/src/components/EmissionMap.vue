@@ -159,25 +159,38 @@ function animatePlumes(canvas, map, emissions, confMin, confMax) {
       const drawW    = Math.abs(tailX - src.x) + perpPad * 2
       const drawH    = Math.abs(tailY - src.y) + perpPad * 2
 
-      // Clip to polygon only when it is meaningfully large on-screen
-      const useClip = Math.sqrt(bestArea) >= 8
-      ctx.save()
-      if (useClip) {
-        ctx.beginPath()
-        ctx.moveTo(bestPts[0].x, bestPts[0].y)
-        for (let i = 1; i < bestPts.length; i++) ctx.lineTo(bestPts[i].x, bestPts[i].y)
-        ctx.closePath()
-        ctx.clip()
+      // ── When polygon is too small on-screen: just draw a radial glow ─────
+      const polyDiag = Math.sqrt(bestArea)
+      if (polyDiag < 8) {
+        const r = 4 + strength * 7
+        ctx.save()
+        ctx.globalCompositeOperation = 'source-over'
+        const sg = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, r)
+        sg.addColorStop(0,   `rgba(${cr},${cg},${cb},0.9)`)
+        sg.addColorStop(0.5, `rgba(${cr},${cg},${cb},0.3)`)
+        sg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
+        ctx.fillStyle = sg
+        ctx.fillRect(src.x - r, src.y - r, r * 2, r * 2)
+        ctx.restore()
+        return   // skip full animation — no unclipped drawRect bleeding
       }
 
-      // ── Base fill ─────────────────────────────────────────────────────────
+      // ── Clip ALWAYS to the largest polygon (polygon is >= 8px on screen) ─
+      ctx.save()
+      ctx.beginPath()
+      ctx.moveTo(bestPts[0].x, bestPts[0].y)
+      for (let i = 1; i < bestPts.length; i++) ctx.lineTo(bestPts[i].x, bestPts[i].y)
+      ctx.closePath()
+      ctx.clip()
+
+      // ── Base tint fill (clipped) ───────────────────────────────────────────
       ctx.globalCompositeOperation = 'source-over'
-      ctx.fillStyle = `rgba(${cr},${cg},${cb},${0.18 + strength * 0.10})`
+      ctx.fillStyle = `rgba(${cr},${cg},${cb},${0.12 + strength * 0.08})`
       ctx.fillRect(drawX, drawY, drawW, drawH)
 
-      // ── Flowing puffs along wind axis ─────────────────────────────────────
-      ctx.globalCompositeOperation = 'screen'
-      const PASSES = 7
+      // ── Flowing puffs along wind axis (clipped, fewer passes, lower alpha) ─
+      ctx.globalCompositeOperation = 'source-over'
+      const PASSES = 4
       for (let pass = 0; pass < PASSES; pass++) {
         const pPhase = (phase + pass / PASSES) % 1
         const travel = effectLen * 1.55
@@ -187,7 +200,7 @@ function animatePlumes(canvas, map, emissions, confMin, confMax) {
         const ey = oy + ny * effectLen * 0.65
 
         const env   = Math.sin(pPhase * Math.PI)
-        const alpha = env * (0.65 + strength * 0.30)
+        const alpha = env * (0.38 + strength * 0.18)
 
         const g = ctx.createLinearGradient(ox, oy, ex, ey)
         g.addColorStop(0,    `rgba(${cr},${cg},${cb},0)`)
@@ -200,8 +213,8 @@ function animatePlumes(canvas, map, emissions, confMin, confMax) {
         ctx.fillRect(drawX, drawY, drawW, drawH)
       }
 
-      // ── Turbulence blobs — lateral dispersion ─────────────────────────────
-      const BLOBS = 8
+      // ── Turbulence blobs — lateral dispersion (clipped) ───────────────────
+      const BLOBS = 6
       for (let k = 0; k < BLOBS; k++) {
         const bPhase = ((t * 0.5 + k * 0.91) / cycleSec) % 1
         const bTx    = src.x + nx * effectLen * bPhase
@@ -211,7 +224,7 @@ function animatePlumes(canvas, map, emissions, confMin, confMax) {
         const bx2    = bTx + px * lat
         const by2    = bTy + py * lat
 
-        const bA = (0.30 + strength * 0.25) * (1 - bPhase * 0.35)
+        const bA = (0.18 + strength * 0.15) * (1 - bPhase * 0.35)
         const rg = ctx.createRadialGradient(bx2, by2, 0, bx2, by2, turbR * (1.2 + bPhase * 0.8))
         rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${bA})`)
         rg.addColorStop(0.40, `rgba(${cr},${cg},${cb},${bA * 0.65})`)
@@ -221,23 +234,20 @@ function animatePlumes(canvas, map, emissions, confMin, confMax) {
         ctx.fillRect(drawX, drawY, drawW, drawH)
       }
 
-      ctx.globalCompositeOperation = 'source-over'
-
-      // ── Pulsing hot source glow ────────────────────────────────────────────
+      // ── Pulsing hot source glow (clipped) ─────────────────────────────────
       const pulse = 0.7 + 0.3 * Math.sin(t * 3.1 + row.latitude * 10)
-      ctx.globalCompositeOperation = 'screen'
+      ctx.globalCompositeOperation = 'source-over'
       const sg = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, glowR)
-      sg.addColorStop(0,   `rgba(255,255,200,${0.95 * pulse})`)
-      sg.addColorStop(0.2, `rgba(${cr},${cg},${cb},${0.85 * pulse})`)
-      sg.addColorStop(0.6, `rgba(${cr},${cg},${cb},${0.40 * pulse})`)
+      sg.addColorStop(0,   `rgba(255,255,200,${0.7 * pulse})`)
+      sg.addColorStop(0.2, `rgba(${cr},${cg},${cb},${0.6 * pulse})`)
+      sg.addColorStop(0.6, `rgba(${cr},${cg},${cb},${0.25 * pulse})`)
       sg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
       ctx.fillStyle = sg
       ctx.fillRect(src.x - glowR, src.y - glowR, glowR * 2, glowR * 2)
-      ctx.globalCompositeOperation = 'source-over'
 
-      ctx.restore()
+      ctx.restore()  // removes clip
 
-      // ── Plume boundary outlines (drawn outside clip, always visible) ───────
+      // ── Plume boundary outlines — stroke only, no fill (outside clip) ─────
       ctx.globalCompositeOperation = 'source-over'
       const outlinePulse = 0.55 + 0.35 * Math.sin(t * 1.8 + row.latitude * 5)
       allPtSets.forEach(pts => {
@@ -245,15 +255,13 @@ function animatePlumes(canvas, map, emissions, confMin, confMax) {
         ctx.moveTo(pts[0].x, pts[0].y)
         for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y)
         ctx.closePath()
-        // Transparent fill so plume interior is tinted
-        ctx.fillStyle = `rgba(${cr},${cg},${cb},${0.08 + strength * 0.08})`
-        ctx.fill()
-        // Glowing dashed-like outline using two strokes (glow + crisp)
+        // Outer glow stroke
         ctx.lineWidth = 3
-        ctx.strokeStyle = `rgba(${cr},${cg},${cb},${0.25 * outlinePulse})`
+        ctx.strokeStyle = `rgba(${cr},${cg},${cb},${0.2 * outlinePulse})`
         ctx.stroke()
+        // Inner crisp stroke
         ctx.lineWidth = 1.2
-        ctx.strokeStyle = `rgba(${cr},${cg},${cb},${0.85 * outlinePulse})`
+        ctx.strokeStyle = `rgba(${cr},${cg},${cb},${0.75 * outlinePulse})`
         ctx.stroke()
       })
     })
