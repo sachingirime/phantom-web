@@ -164,92 +164,95 @@ function animatePlumes(canvas, map, emissions, confMin, confMax) {
       })
       ctx.clip()  // union clip — all sub-polygons in one path
 
-      // Travel length for puffs: actual screen distance to polygon centroid,
-      // scaled to polygon diagonal so puffs fill the whole boundary.
-      const polyLen  = Math.max(polyDiag * 0.9, 30)
+      // Puff travel length = polygon diagonal. Cycle speed from real wind speed.
+      const polyLen  = Math.max(polyDiag * 0.95, 30)
       const cycleSec = Math.max(polyLen / (windPx + 0.1), 0.6)
 
-      // ── Background wisps — large slow transparent rolls ────────────────────
-      const N_WISPS = 5
+      // ── Layer 0: Subtle base tint fills the entire polygon interior ────────
+      // fillRect is clipped to the union polygon — no bleeding.
+      ctx.fillStyle = `rgba(${cr},${cg},${cb},${0.06 + strength * 0.05})`
+      ctx.fillRect(0, 0, W, H)
+
+      // ── Layer 1: Slow background volume wisps ──────────────────────────────
+      const N_WISPS = 10
       for (let k = 0; k < N_WISPS; k++) {
-        const kP = ((t / (cycleSec * 2.2)) + k / N_WISPS) % 1
-        const lat = polyLen * 0.28 * Math.sin(t * 0.45 + k * 2.09)
+        const kP = ((t / (cycleSec * 2.5)) + k / N_WISPS) % 1
+        const lat = polyLen * 0.22 * Math.sin(t * 0.38 + k * 2.09)
         const bx  = src.x + nx * polyLen * kP + px * lat
         const by  = src.y + ny * polyLen * kP + py * lat
-        const r   = (14 + strength * 20) * (0.55 + kP * 1.1)
-        const a   = Math.sin(kP * Math.PI) * (0.07 + strength * 0.06)
+        const r   = (16 + strength * 26) * (0.5 + kP * 1.2)
+        const a   = Math.sin(kP * Math.PI) * (0.13 + strength * 0.10)
         if (a < 0.005) continue
         const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
-        rg.addColorStop(0,   `rgba(${cr},${cg},${cb},${a})`)
-        rg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${a * 0.45})`)
-        rg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
-        ctx.fillStyle = rg
-        ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
-      }
-
-      // ── Smoke puffs — main particle stream ────────────────────────────────
-      // Each puff is a soft radial gradient circle (arc), not a fillRect.
-      // Two-frequency lateral wobble gives natural billowing motion.
-      const N_PUFFS = 22
-      for (let k = 0; k < N_PUFFS; k++) {
-        const kP = ((t / cycleSec) + k / N_PUFFS) % 1
-
-        // Two-frequency lateral oscillation → organic billowing
-        const latAmp = polyLen * 0.20
-        const lat = latAmp * (
-          0.60 * Math.sin(t * 0.75 + k * 1.618 + kP * Math.PI) +
-          0.40 * Math.sin(t * 1.55 + k * 2.937 + kP * Math.PI * 1.7)
-        )
-        const bx = src.x + nx * polyLen * kP + px * lat
-        const by = src.y + ny * polyLen * kP + py * lat
-
-        // Radius: small near source, expands as puff travels (smoke disperses)
-        const baseR = 4 + strength * 9
-        const r     = baseR * (0.35 + kP * 1.8)
-
-        // Alpha envelope: quick fade-in (0–10%), plateau, slow fade-out (65–100%)
-        const fadeIn  = Math.min(kP / 0.10, 1)
-        const fadeOut = kP > 0.65 ? Math.max(0, 1 - (kP - 0.65) / 0.35) : 1
-        const a       = fadeIn * fadeOut * (0.20 + strength * 0.14)
-        if (a < 0.008) continue
-
-        const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
         rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${a})`)
-        rg.addColorStop(0.38, `rgba(${cr},${cg},${cb},${a * 0.72})`)
-        rg.addColorStop(0.72, `rgba(${cr},${cg},${cb},${a * 0.28})`)
+        rg.addColorStop(0.45, `rgba(${cr},${cg},${cb},${a * 0.55})`)
         rg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
         ctx.fillStyle = rg
         ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
       }
 
-      // ── Pulsing source hot-spot glow ───────────────────────────────────────
-      const pulse = 0.72 + 0.28 * Math.sin(t * 2.6 + row.latitude * 10)
-      const glowR  = 6 + strength * 11
+      // ── Layer 2: Main smoke puffs — dense two-frequency billowing stream ───
+      const N_PUFFS = 40
+      for (let k = 0; k < N_PUFFS; k++) {
+        const kP = ((t / cycleSec) + k / N_PUFFS) % 1
+        // Two-frequency lateral: golden-ratio offsets give non-repeating motion
+        const latAmp = polyLen * 0.18
+        const lat = latAmp * (
+          0.58 * Math.sin(t * 0.72 + k * 1.618 + kP * Math.PI) +
+          0.42 * Math.sin(t * 1.48 + k * 2.937 + kP * Math.PI * 1.8)
+        )
+        const bx = src.x + nx * polyLen * kP + px * lat
+        const by = src.y + ny * polyLen * kP + py * lat
+
+        const baseR = 5 + strength * 11
+        const r     = baseR * (0.30 + kP * 2.0)   // expands as it travels
+
+        // Quick fade-in (0–8%), full plateau, gradual fade-out (60–100%)
+        const fadeIn  = Math.min(kP / 0.08, 1)
+        const fadeOut = kP > 0.60 ? Math.max(0, 1 - (kP - 0.60) / 0.40) : 1
+        const a       = fadeIn * fadeOut * (0.30 + strength * 0.18)
+        if (a < 0.008) continue
+
+        const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
+        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${a})`)
+        rg.addColorStop(0.35, `rgba(${cr},${cg},${cb},${a * 0.75})`)
+        rg.addColorStop(0.70, `rgba(${cr},${cg},${cb},${a * 0.30})`)
+        rg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
+        ctx.fillStyle = rg
+        ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
+      }
+
+      // ── Layer 3: Dense core puffs near source — tight, high alpha ─────────
+      const N_CORE = 14
+      for (let k = 0; k < N_CORE; k++) {
+        const kP = ((t / (cycleSec * 0.5)) + k / N_CORE) % 1
+        const travelFrac = kP * 0.35           // only covers first 35% of polygon
+        const lat = polyLen * 0.10 * Math.sin(t * 1.1 + k * 1.618)
+        const bx  = src.x + nx * polyLen * travelFrac + px * lat
+        const by  = src.y + ny * polyLen * travelFrac + py * lat
+        const r   = (3 + strength * 7) * (0.5 + kP * 0.8)
+        const a   = Math.sin(kP * Math.PI) * (0.40 + strength * 0.22)
+        if (a < 0.01) continue
+        const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
+        rg.addColorStop(0,   `rgba(${cr},${cg},${cb},${a})`)
+        rg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${a * 0.6})`)
+        rg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
+        ctx.fillStyle = rg
+        ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
+      }
+
+      // ── Layer 4: Pulsing hot source glow ──────────────────────────────────
+      const pulse = 0.70 + 0.30 * Math.sin(t * 2.6 + row.latitude * 10)
+      const glowR  = 7 + strength * 12
       const sg = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, glowR)
-      sg.addColorStop(0,   `rgba(255,255,210,${0.65 * pulse})`)
-      sg.addColorStop(0.3, `rgba(${cr},${cg},${cb},${0.50 * pulse})`)
-      sg.addColorStop(0.7, `rgba(${cr},${cg},${cb},${0.18 * pulse})`)
+      sg.addColorStop(0,   `rgba(255,255,210,${0.70 * pulse})`)
+      sg.addColorStop(0.3, `rgba(${cr},${cg},${cb},${0.55 * pulse})`)
+      sg.addColorStop(0.7, `rgba(${cr},${cg},${cb},${0.20 * pulse})`)
       sg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
       ctx.fillStyle = sg
       ctx.beginPath(); ctx.arc(src.x, src.y, glowR, 0, Math.PI * 2); ctx.fill()
 
-      ctx.restore()  // removes union clip
-
-      // ── Plume boundary outlines — stroke only, drawn outside clip ─────────
-      ctx.globalCompositeOperation = 'source-over'
-      const outlinePulse = 0.5 + 0.4 * Math.sin(t * 1.6 + row.latitude * 5)
-      allPtSets.forEach(pts => {
-        ctx.beginPath()
-        ctx.moveTo(pts[0].x, pts[0].y)
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y)
-        ctx.closePath()
-        ctx.lineWidth = 3
-        ctx.strokeStyle = `rgba(${cr},${cg},${cb},${0.18 * outlinePulse})`
-        ctx.stroke()
-        ctx.lineWidth = 1.2
-        ctx.strokeStyle = `rgba(${cr},${cg},${cb},${0.70 * outlinePulse})`
-        ctx.stroke()
-      })
+      ctx.restore()  // removes union clip — no outlines drawn, smoke IS the boundary
     })
 
     raf = requestAnimationFrame(frame)
