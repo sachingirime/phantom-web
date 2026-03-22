@@ -166,49 +166,43 @@ function animatePlumes(canvas, map, pane, emissions, qMin, qMax) {
       })
       ctx.clip()
 
-      // Use 'screen' blending: overlapping puffs near source accumulate naturally
-      // without blowing out to white. Far-end sparse puffs stay faint.
-      ctx.globalCompositeOperation = 'screen'
-
-      // ── Layer A: Ghost spine — almost invisible, just anchors the centerline ─
+      // ── Layer A: Subtle static spine — anchors the plume centerline ─────────
+      // Kept deliberately faint so puff motion reads clearly over it.
       const N_SPINE = 30
       for (let k = 0; k < N_SPINE; k++) {
         const frac  = k / (N_SPINE - 1)
         const dist  = frac * polyLen
         const sigma = sig0 * (1 + Math.sqrt(frac) * 2.2)
-        const conc  = Math.exp(-frac * 3.5)
+        const conc  = Math.exp(-frac * 3.0)
         const lat   = sigma * 0.06 * Math.sin(t * 0.28 + frac * Math.PI * 1.5)
 
         const bx = src.x + nx * dist + lx * lat
         const by = src.y + ny * dist + ly * lat
-        const a  = conc * strength * 0.07    // very faint — motion layer does the work
-        if (a < 0.004) continue
+        const a  = conc * strength * 0.12
+        if (a < 0.005) continue
 
         const rg = ctx.createRadialGradient(bx, by, 0, bx, by, sigma)
-        rg.addColorStop(0,   `rgba(${cr},${cg},${cb},${Math.min(a, 0.25)})`)
-        rg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${a * 0.3})`)
+        rg.addColorStop(0,   `rgba(${cr},${cg},${cb},${Math.min(a, 0.40)})`)
+        rg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${a * 0.35})`)
         rg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
         ctx.fillStyle = rg
         ctx.beginPath(); ctx.arc(bx, by, sigma, 0, Math.PI * 2); ctx.fill()
       }
 
-      // ── Layer B: Lagrangian puffs — low per-puff opacity, screen-blended ─────
-      // With 'screen' mode, many puffs at source build up to a bright dense core,
-      // while sparse puffs at the far end stay faint → motion is clearly visible.
-      //
-      // Three turbulent eddy scales give realistic lateral meandering:
-      //   Large  (~28 s): whole-plume snake, visible at all zooms
-      //   Medium (~7 s) : inter-puff spread, plume width variation
-      //   Small  (~2 s) : fast shredding near source
+      // ── Layer B: Lagrangian puffs (source-over, tuned alpha) ─────────────────
+      // With source-over, N overlapping puffs combine as: 1-(1-a)^N.
+      // Near source ~10 puffs overlap at alpha≈0.28 → combined ≈ 0.95 (opaque).
+      // Far end  ~10 puffs at alpha≈0.28*exp(-2.8)≈0.02 → combined ≈ 0.20 (faint).
+      // This naturally produces a dense core that fades to wispy tail with clear motion.
       const N_PUFFS = 110
       for (let k = 0; k < N_PUFFS; k++) {
         const phase = k / N_PUFFS
-        const frac  = (t / puffLife + phase) % 1    // 0 = just born at source, 1 = far end
+        const frac  = (t / puffLife + phase) % 1    // 0 = born at source, 1 = far end
         const dist  = frac * polyLen
         // σ grows with √frac (Fickian diffusion) — tight at source, wide at far end
         const sigma = sig0 * (0.28 + Math.sqrt(frac) * 2.8)
 
-        // Lateral turbulence: amplitude scales with local σ so width grows naturally
+        // Lateral turbulence — three eddy scales
         const lat = sigma * (
           0.55 * Math.sin(t * 0.20 + k * 1.618 + phase * 3.14) +
           0.28 * Math.sin(t * 0.85 + k * 2.718 + frac  * 6.28) +
@@ -218,17 +212,15 @@ function animatePlumes(canvas, map, pane, emissions, qMin, qMax) {
         const bx = src.x + nx * dist + lx * lat
         const by = src.y + ny * dist + ly * lat
 
-        // Steep concentration decay: source dense, far end faint → motion visible
-        const conc    = Math.exp(-frac * 2.8)
+        const conc    = Math.exp(-frac * 2.8)   // steep decay: dense source → wispy tail
         const fadeIn  = Math.min(frac / 0.03, 1)
         const fadeOut = frac > 0.78 ? Math.max(0, 1 - (frac - 0.78) / 0.22) : 1
-        // Low per-puff alpha — screen blending accumulates these
-        const a = conc * fadeIn * fadeOut * strength * 0.18
-        if (a < 0.004) continue
+        const a = conc * fadeIn * fadeOut * strength * 0.28   // accumulates nicely at source
+        if (a < 0.005) continue
 
         const r  = sigma * 1.0
         const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
-        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${Math.min(a, 0.55)})`)
+        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${Math.min(a, 0.82)})`)
         rg.addColorStop(0.35, `rgba(${cr},${cg},${cb},${a * 0.55})`)
         rg.addColorStop(0.70, `rgba(${cr},${cg},${cb},${a * 0.18})`)
         rg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
@@ -247,7 +239,7 @@ function animatePlumes(canvas, map, pane, emissions, qMin, qMax) {
       ctx.fillStyle = sg
       ctx.beginPath(); ctx.arc(src.x, src.y, srcR, 0, Math.PI * 2); ctx.fill()
 
-      ctx.restore()   // also restores globalCompositeOperation to 'source-over'
+      ctx.restore()
     })
 
     raf = requestAnimationFrame(frame)
