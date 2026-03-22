@@ -52,17 +52,16 @@ const mapEl   = ref(null)
 const summary = ref(null)
 const loading = ref(true)
 
-// ── Plasma/Inferno colormap — vivid dark-purple → magenta → orange → yellow ──
+// ── Gas plume colormap — blue → cyan → lime → yellow → orange-red ──────────
+// Designed for visibility on brown satellite terrain at any zoom level.
 function thermalRGB(t) {
   t = Math.max(0, Math.min(1, t))
-  // Key stops: deep-indigo → violet → hot-pink → orange → bright-yellow
   const stops = [
-    [13,   8,  135],   // t=0.00  deep indigo
-    [84,   2,  163],   // t=0.20  purple
-    [174,  42, 121],   // t=0.40  hot pink / magenta
-    [238, 107,  34],   // t=0.60  orange
-    [253, 210,  36],   // t=0.80  yellow
-    [240, 249,  33],   // t=1.00  bright yellow-white
+    [30,  120, 255],   // t=0.00  bright blue   (low confidence)
+    [0,   220, 255],   // t=0.25  cyan
+    [0,   240,  80],   // t=0.50  lime green
+    [255, 220,   0],   // t=0.75  yellow
+    [255,  60,   0],   // t=1.00  orange-red     (high confidence)
   ]
   const n   = stops.length - 1
   const idx = Math.min(Math.floor(t * n), n - 1)
@@ -136,24 +135,15 @@ function animatePlumes(canvas, map, emissions, confMin, confMax) {
       const ny = pixDist > 0.5 ? dy / pixDist : -1
       const px = -ny, py = nx   // perpendicular
 
-      // ── When polygon is too small on-screen (zoomed out): small glow only ──
-      const polyDiag = Math.sqrt(bestArea)
-      if (polyDiag < 8) {
-        const r = 4 + strength * 7
-        ctx.save()
-        ctx.globalCompositeOperation = 'source-over'
-        const sg0 = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, r)
-        sg0.addColorStop(0,   `rgba(${cr},${cg},${cb},0.9)`)
-        sg0.addColorStop(0.5, `rgba(${cr},${cg},${cb},0.3)`)
-        sg0.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
-        ctx.fillStyle = sg0
-        ctx.beginPath(); ctx.arc(src.x, src.y, r, 0, Math.PI * 2); ctx.fill()
-        ctx.restore()
-        return
-      }
-
       // ── SMOKE SIMULATION ──────────────────────────────────────────────────
-      // Clip to UNION of ALL polygons so smoke never bleeds outside boundaries.
+      // All radii are proportional to polyDiag so the effect scales correctly
+      // at any zoom level. Union-clip of all polygons contains everything.
+      const polyDiag = Math.sqrt(bestArea)
+      const polyLen  = Math.max(polyDiag, 20)
+      // Base radius unit: 18% of polygon diagonal, min 6px so zoom-out is visible
+      const R0       = Math.max(polyDiag * 0.18, 6)
+      const cycleSec = Math.max(polyLen / (windPx + 0.1), 0.5)
+
       ctx.save()
       ctx.globalCompositeOperation = 'source-over'
       ctx.beginPath()
@@ -162,97 +152,87 @@ function animatePlumes(canvas, map, emissions, confMin, confMax) {
         for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y)
         ctx.closePath()
       })
-      ctx.clip()  // union clip — all sub-polygons in one path
+      ctx.clip()   // union clip — smoke stays inside every sub-polygon
 
-      // Puff travel length = polygon diagonal. Cycle speed from real wind speed.
-      const polyLen  = Math.max(polyDiag * 0.95, 30)
-      const cycleSec = Math.max(polyLen / (windPx + 0.1), 0.6)
-
-      // ── Layer 0: Subtle base tint fills the entire polygon interior ────────
-      // fillRect is clipped to the union polygon — no bleeding.
-      ctx.fillStyle = `rgba(${cr},${cg},${cb},${0.06 + strength * 0.05})`
-      ctx.fillRect(0, 0, W, H)
-
-      // ── Layer 1: Slow background volume wisps ──────────────────────────────
-      const N_WISPS = 10
-      for (let k = 0; k < N_WISPS; k++) {
-        const kP = ((t / (cycleSec * 2.5)) + k / N_WISPS) % 1
-        const lat = polyLen * 0.22 * Math.sin(t * 0.38 + k * 2.09)
-        const bx  = src.x + nx * polyLen * kP + px * lat
-        const by  = src.y + ny * polyLen * kP + py * lat
-        const r   = (16 + strength * 26) * (0.5 + kP * 1.2)
-        const a   = Math.sin(kP * Math.PI) * (0.13 + strength * 0.10)
-        if (a < 0.005) continue
-        const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
-        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${a})`)
-        rg.addColorStop(0.45, `rgba(${cr},${cg},${cb},${a * 0.55})`)
-        rg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
-        ctx.fillStyle = rg
-        ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
-      }
-
-      // ── Layer 2: Main smoke puffs — dense two-frequency billowing stream ───
-      const N_PUFFS = 40
-      for (let k = 0; k < N_PUFFS; k++) {
-        const kP = ((t / cycleSec) + k / N_PUFFS) % 1
-        // Two-frequency lateral: golden-ratio offsets give non-repeating motion
-        const latAmp = polyLen * 0.18
-        const lat = latAmp * (
-          0.58 * Math.sin(t * 0.72 + k * 1.618 + kP * Math.PI) +
-          0.42 * Math.sin(t * 1.48 + k * 2.937 + kP * Math.PI * 1.8)
-        )
-        const bx = src.x + nx * polyLen * kP + px * lat
-        const by = src.y + ny * polyLen * kP + py * lat
-
-        const baseR = 5 + strength * 11
-        const r     = baseR * (0.30 + kP * 2.0)   // expands as it travels
-
-        // Quick fade-in (0–8%), full plateau, gradual fade-out (60–100%)
-        const fadeIn  = Math.min(kP / 0.08, 1)
-        const fadeOut = kP > 0.60 ? Math.max(0, 1 - (kP - 0.60) / 0.40) : 1
-        const a       = fadeIn * fadeOut * (0.30 + strength * 0.18)
-        if (a < 0.008) continue
-
-        const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
-        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${a})`)
-        rg.addColorStop(0.35, `rgba(${cr},${cg},${cb},${a * 0.75})`)
-        rg.addColorStop(0.70, `rgba(${cr},${cg},${cb},${a * 0.30})`)
-        rg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
-        ctx.fillStyle = rg
-        ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
-      }
-
-      // ── Layer 3: Dense core puffs near source — tight, high alpha ─────────
-      const N_CORE = 14
-      for (let k = 0; k < N_CORE; k++) {
-        const kP = ((t / (cycleSec * 0.5)) + k / N_CORE) % 1
-        const travelFrac = kP * 0.35           // only covers first 35% of polygon
-        const lat = polyLen * 0.10 * Math.sin(t * 1.1 + k * 1.618)
-        const bx  = src.x + nx * polyLen * travelFrac + px * lat
-        const by  = src.y + ny * polyLen * travelFrac + py * lat
-        const r   = (3 + strength * 7) * (0.5 + kP * 0.8)
-        const a   = Math.sin(kP * Math.PI) * (0.40 + strength * 0.22)
-        if (a < 0.01) continue
+      // ── Layer A: Static Gaussian density spine ─────────────────────────────
+      // Overlapping circles along the wind axis with Gaussian spread + decay.
+      // Always visible at any zoom — gives the "plume shape" even when paused.
+      const N_SPINE = 22
+      for (let k = 0; k < N_SPINE; k++) {
+        const frac = k / (N_SPINE - 1)
+        const bx   = src.x + nx * polyLen * frac
+        const by   = src.y + ny * polyLen * frac
+        // Radius grows with distance (diffusion spreading)
+        const r = R0 * (0.7 + frac * 2.8)
+        // Alpha decays exponentially from source (concentration drops with distance)
+        const a = Math.exp(-frac * 2.2) * (0.22 + strength * 0.18)
         const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
         rg.addColorStop(0,   `rgba(${cr},${cg},${cb},${a})`)
-        rg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${a * 0.6})`)
+        rg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${a * 0.5})`)
         rg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
         ctx.fillStyle = rg
         ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
       }
 
-      // ── Layer 4: Pulsing hot source glow ──────────────────────────────────
-      const pulse = 0.70 + 0.30 * Math.sin(t * 2.6 + row.latitude * 10)
-      const glowR  = 7 + strength * 12
+      // ── Layer B: Animated turbulent puffs ─────────────────────────────────
+      // Two-frequency lateral wobble (golden-ratio seeds) gives non-repeating
+      // organic motion visible at every zoom level.
+      const N_PUFFS = 24
+      for (let k = 0; k < N_PUFFS; k++) {
+        const kP = ((t / cycleSec) + k / N_PUFFS) % 1
+        const lat = R0 * 2.2 * (
+          0.60 * Math.sin(t * 0.70 + k * 1.618 + kP * Math.PI) +
+          0.40 * Math.sin(t * 1.45 + k * 2.937 + kP * Math.PI * 1.9)
+        )
+        const bx = src.x + nx * polyLen * kP + px * lat
+        const by = src.y + ny * polyLen * kP + py * lat
+        // Puffs start tight at source, expand as they travel
+        const r  = R0 * (0.4 + kP * 2.4)
+        // Asymmetric envelope: fast in, slow out
+        const fadeIn  = Math.min(kP / 0.10, 1)
+        const fadeOut = kP > 0.60 ? Math.max(0, 1 - (kP - 0.60) / 0.40) : 1
+        const a = fadeIn * fadeOut * (0.28 + strength * 0.16)
+        if (a < 0.01) continue
+        const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
+        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${a})`)
+        rg.addColorStop(0.40, `rgba(${cr},${cg},${cb},${a * 0.65})`)
+        rg.addColorStop(0.80, `rgba(${cr},${cg},${cb},${a * 0.20})`)
+        rg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
+        ctx.fillStyle = rg
+        ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
+      }
+
+      // ── Layer C: Dense rolling wisps near source ───────────────────────────
+      const N_WISPS = 10
+      for (let k = 0; k < N_WISPS; k++) {
+        const kP  = ((t / (cycleSec * 0.6)) + k / N_WISPS) % 1
+        const frac = kP * 0.45   // wisps fill only first 45% (near source)
+        const lat  = R0 * 1.2 * Math.sin(t * 1.0 + k * 1.618)
+        const bx   = src.x + nx * polyLen * frac + px * lat
+        const by   = src.y + ny * polyLen * frac + py * lat
+        const r    = R0 * (0.5 + kP * 1.2)
+        const a    = Math.sin(kP * Math.PI) * (0.35 + strength * 0.20)
+        if (a < 0.01) continue
+        const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
+        rg.addColorStop(0,   `rgba(${cr},${cg},${cb},${a})`)
+        rg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${a * 0.55})`)
+        rg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
+        ctx.fillStyle = rg
+        ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
+      }
+
+      // ── Layer D: Pulsing hot source point ─────────────────────────────────
+      const pulse = 0.70 + 0.30 * Math.sin(t * 2.5 + row.latitude * 10)
+      const glowR = Math.max(R0 * 0.7, 5)
       const sg = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, glowR)
-      sg.addColorStop(0,   `rgba(255,255,210,${0.70 * pulse})`)
-      sg.addColorStop(0.3, `rgba(${cr},${cg},${cb},${0.55 * pulse})`)
-      sg.addColorStop(0.7, `rgba(${cr},${cg},${cb},${0.20 * pulse})`)
+      sg.addColorStop(0,   `rgba(255,255,220,${0.80 * pulse})`)
+      sg.addColorStop(0.3, `rgba(${cr},${cg},${cb},${0.60 * pulse})`)
+      sg.addColorStop(0.7, `rgba(${cr},${cg},${cb},${0.22 * pulse})`)
       sg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
       ctx.fillStyle = sg
       ctx.beginPath(); ctx.arc(src.x, src.y, glowR, 0, Math.PI * 2); ctx.fill()
 
-      ctx.restore()  // removes union clip — no outlines drawn, smoke IS the boundary
+      ctx.restore()   // removes union clip
     })
 
     raf = requestAnimationFrame(frame)
@@ -383,7 +363,7 @@ onMounted(async () => {
       <div style="background:rgba(15,23,42,0.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 16px;font-family:Inter,sans-serif;font-size:0.75rem;color:#fff;min-width:200px;">
         <div style="font-weight:700;margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase;color:#94a3b8;">Plume Intensity</div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <div style="flex:1;height:10px;border-radius:4px;background:linear-gradient(to right,rgb(0,0,255),rgb(0,255,255),rgb(0,255,0),rgb(255,255,0),rgb(255,0,0));"></div>
+          <div style="flex:1;height:10px;border-radius:4px;background:linear-gradient(to right,rgb(30,120,255),rgb(0,220,255),rgb(0,240,80),rgb(255,220,0),rgb(255,60,0));"></div>
         </div>
         <div style="display:flex;justify-content:space-between;color:#94a3b8;margin-bottom:14px;font-size:0.7rem;">
           <span>Low (${(confMin*100).toFixed(1)}%)</span><span>High (${(confMax*100).toFixed(1)}%)</span>
