@@ -130,9 +130,9 @@ const impactCards = [
 }
 
 .section-header p {
-  font-size: 1.05rem;
-  color: rgba(148,163,184,0.9);
-  line-height: 1.75;
+  font-size: 1.1rem;
+  color: rgba(203,213,225,0.88);
+  line-height: 1.8;
 }
 
 .impact-grid {
@@ -171,9 +171,9 @@ const impactCards = [
 }
 
 .impact-text {
-  font-size: 0.9rem;
-  color: rgba(148,163,184,0.85);
-  line-height: 1.75;
+  font-size: 1rem;
+  color: rgba(203,213,225,0.85);
+  line-height: 1.8;
 }
 
 /* Sources */
@@ -213,9 +213,9 @@ const impactCards = [
 }
 
 .sources-block p {
-  font-size: 0.92rem;
-  color: rgba(148,163,184,0.85);
-  line-height: 1.8;
+  font-size: 1rem;
+  color: rgba(203,213,225,0.9);
+  line-height: 1.85;
 }
 
 .img-wrap {
@@ -263,11 +263,28 @@ const impactCards = [
 }
 
 .img-caption {
-  font-size: 0.85rem;
-  color: rgba(148,163,184,0.65);
+  font-size: 0.95rem;
+  color: rgba(203,213,225,0.65);
   text-align: center;
   line-height: 1.7;
   max-width: 700px;
   margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .sources-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .sources-section { padding-top: 2.5rem; }
+  .sub-heading { margin-bottom: 2rem; }
+  .impact-grid { gap: 1rem; }
+  .impact-card { padding: 1.75rem; }
+  .img-wrap.tall { height: 260px; }
+  .img-wrap.wide { height: 260px; }
+  .section-header { margin-bottom: 2.5rem; }
+}
+
+@media (max-width: 480px) {
+  .impact-grid { grid-template-columns: 1fr; }
+  .img-wrap.tall { height: 220px; }
+  .img-wrap.wide { height: 220px; }
 }
 </style>
