@@ -7,7 +7,7 @@
       </div>
       <h1 class="hero-title reveal reveal-delay-1">PHANTOM</h1>
       <p class="hero-acronym reveal reveal-delay-2">
-        Physics-Informed Hyperspectral Adversarial Network for Transformer-Optimized Methane Detection
+        Greenhouse gas intelligent sensing that you can trust
       </p>
       <p class="hero-subtitle reveal reveal-delay-2">
         Methane detection and emission rate estimation from airborne hyperspectral imagery,
@@ -18,17 +18,18 @@
           <span class="stat-value">100%</span>
           <span class="stat-label">F1, Critical Emitters</span>
         </div>
-        <div class="stat-divider" />
         <div class="stat">
           <span class="stat-value">96.65%</span>
           <span class="stat-label">F1, Standard Class</span>
         </div>
-        <div class="stat-divider" />
         <div class="stat">
           <span class="stat-value">97 kg/hr</span>
-          <span class="stat-label">Detection Limit</span>
+          <span class="stat-label">Min. Verified Detection</span>
         </div>
-        <div class="stat-divider" />
+        <div class="stat">
+          <span class="stat-value">16 kg/hr</span>
+          <span class="stat-label">Lowest Observed Detection</span>
+        </div>
         <div class="stat">
           <span class="stat-value">178</span>
           <span class="stat-label">Sites, Permian Basin</span>
@@ -75,9 +76,21 @@ function scrollTo(id) {
   pointer-events: none;
 }
 
+.hero-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 0%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 0%, transparent 80%);
+}
+
 .hero-content {
   position: relative;
-  max-width: 860px;
+  max-width: 960px;
   width: 100%;
 }
 
@@ -99,7 +112,7 @@ function scrollTo(id) {
 
 
 .hero-title {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-family: var(--font-display);
   font-size: clamp(4rem, 14vw, 10rem);
   font-weight: 700;
   letter-spacing: -0.04em;
@@ -134,43 +147,44 @@ function scrollTo(id) {
 }
 
 .hero-stats {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2rem;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
   margin-bottom: 2.5rem;
-  flex-wrap: wrap;
-  padding: 1.75rem 2rem;
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.07);
   border-radius: 16px;
   backdrop-filter: blur(8px);
+  overflow: hidden;
 }
 
-.stat { display: flex; flex-direction: column; align-items: center; }
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.75rem 1rem;
+  border-right: 1px solid rgba(255,255,255,0.07);
+}
+
+.stat:last-child { border-right: none; }
 
 .stat-value {
-  font-size: clamp(1.4rem, 3.5vw, 2.25rem);
+  font-size: clamp(1.2rem, 2.8vw, 2rem);
   font-weight: 800;
   line-height: 1;
   color: #fff;
 }
 
 .stat-label {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 500;
   color: rgba(100,116,139,0.85);
-  margin-top: 0.35rem;
+  margin-top: 0.4rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   text-align: center;
-}
-
-.stat-divider {
-  width: 1px;
-  height: 32px;
-  background: rgba(255,255,255,0.1);
-  flex-shrink: 0;
+  max-width: 100px;
+  line-height: 1.4;
 }
 
 .hero-actions {
@@ -207,7 +221,8 @@ function scrollTo(id) {
 
 /* Tablet */
 @media (max-width: 1024px) {
-  .hero-stats { gap: 1.5rem; padding: 1.5rem; }
+  .hero-stats { grid-template-columns: repeat(5, 1fr); }
+  .stat { padding: 1.5rem 0.75rem; }
 }
 
 /* Mobile */
@@ -215,13 +230,11 @@ function scrollTo(id) {
   .hero { padding: 6rem 1.25rem 3.5rem; }
   .hero-badge { font-size: 0.68rem; padding: 0.35rem 1rem; text-align: center; }
   .hero-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    padding: 1.25rem;
+    grid-template-columns: repeat(3, 1fr);
   }
-  .stat-divider { display: none; }
-  .stat { padding: 0.5rem; background: rgba(255,255,255,0.04); border-radius: 10px; }
+  .stat:nth-child(3) { border-right: none; }
+  .stat:nth-child(4), .stat:nth-child(5) { border-top: 1px solid rgba(255,255,255,0.07); }
+  .stat:nth-child(5) { border-right: none; grid-column: span 1; }
   .hero-actions { flex-direction: column; align-items: center; }
   .btn-primary, .btn-ghost { width: 100%; max-width: 320px; text-align: center; }
 }

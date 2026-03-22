@@ -17,6 +17,9 @@
             <div v-for="stat in stats" :key="stat.label" class="stat-item">
               <span class="stat-value">{{ stat.value }}</span>
               <span class="stat-label">{{ stat.label }}</span>
+              <div class="stat-bar-track">
+                <div class="stat-bar-fill" :style="{ width: stat.bar, background: stat.barColor }"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -29,10 +32,10 @@
         <div class="tech-content">
           <h4>Technical Approach</h4>
           <p>
-            PHANTOM combines physics-informed neural networks with a transformer-based architecture
-            trained adversarially on matched-filter preprocessed SWIR hyperspectral data.
-            The model is designed to separate the CH₄ absorption feature from surface reflectance
-            and atmospheric confounders — conditions that cause false positives in classical approaches.
+            PHANTOM uses a deep learning architecture that integrates physical principles of
+            atmospheric radiative transfer with data-driven detection. The model is designed to
+            reliably identify methane plumes under diverse terrain and atmospheric conditions
+            where conventional methods produce high false positive rates.
           </p>
           <div class="tech-pills">
             <span v-for="tech in technologies" :key="tech" class="pill">{{ tech }}</span>
@@ -40,10 +43,60 @@
         </div>
         <div class="tech-img-wrap">
           <img src="/images/aviris-ng.jpg" alt="NASA AVIRIS-NG hyperspectral sensor" />
-          <div class="img-overlay">
-            <span>NASA AVIRIS-NG Hyperspectral Sensor</span>
+        </div>
+      </div>
+
+      <div class="fusion-block">
+        <div class="fusion-header">
+          <span class="section-tag">Research Extension</span>
+          <h3>Multi-Sensor Fusion</h3>
+          <p>
+            PHANTOM supports fusion of hyperspectral data with complementary imaging modalities.
+            Integrating multiple sensor streams produces meaningful gains in both detection
+            precision and false positive reduction.
+          </p>
+        </div>
+        <div class="fusion-compare">
+          <div class="compare-col">
+            <div class="compare-label">Single Modality</div>
+            <div class="compare-stats">
+              <div class="compare-stat">
+                <span class="compare-val">62.42%</span>
+                <span class="compare-key">AUPRC</span>
+                <div class="bar-track"><div class="bar-fill" style="width: 62.42%"></div></div>
+              </div>
+              <div class="compare-stat">
+                <span class="compare-val">11.43%</span>
+                <span class="compare-key">False Positive Rate</span>
+                <div class="bar-track"><div class="bar-fill bar-fpr" style="width: 11.43%"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="fusion-arrow">
+            <svg viewBox="0 0 40 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 12 H32 M26 4 L38 12 L26 20" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>+ Satellite</span>
+          </div>
+          <div class="compare-col compare-col-highlight">
+            <div class="compare-label">Multi-Sensor Fusion</div>
+            <div class="compare-stats">
+              <div class="compare-stat">
+                <span class="compare-val highlight-val">75%</span>
+                <span class="compare-key">AUPRC</span>
+                <div class="bar-track"><div class="bar-fill bar-fusion" style="width: 75%"></div></div>
+              </div>
+              <div class="compare-stat">
+                <span class="compare-val highlight-val">~4%</span>
+                <span class="compare-key">False Positive Rate</span>
+                <div class="bar-track"><div class="bar-fill bar-fpr-fusion" style="width: 4%"></div></div>
+              </div>
+            </div>
           </div>
         </div>
+        <p class="fusion-note">
+          Multi-modal sensor fusion. MESA Lab, UC Merced.
+        </p>
       </div>
     </div>
   </section>
@@ -51,10 +104,10 @@
 
 <script setup>
 const stats = [
-  { value: '100%', label: 'F1 Score (Critical)' },
-  { value: '96.65%', label: 'F1 Score (Standard)' },
-  { value: '11.43%', label: 'False Positive Rate' },
-  { value: '62.42%', label: 'AUPRC' },
+  { value: '100%', label: 'F1 Score (Critical)', bar: '100%', barColor: '#34d399' },
+  { value: '96.65%', label: 'F1 Score (Standard)', bar: '96.65%', barColor: '#60a5fa' },
+  { value: '11.43%', label: 'False Positive Rate', bar: '11.43%', barColor: '#f97316' },
+  { value: '62.42%', label: 'AUPRC', bar: '62.42%', barColor: '#a78bfa' },
 ]
 
 const technologies = [
@@ -178,6 +231,20 @@ const technologies = [
   color: rgba(148,163,184,0.7);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  margin-bottom: 0.5rem;
+}
+
+.stat-bar-track {
+  height: 3px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  opacity: 0.85;
 }
 
 .benchmark-note {
@@ -245,17 +312,156 @@ const technologies = [
   display: block;
 }
 
-.img-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(15,23,42,0.85), transparent);
-  padding: 2rem 1.5rem 1.25rem;
-  color: #fff;
-  font-size: 0.8rem;
+
+/* Fusion block */
+.fusion-block {
+  margin-top: 2rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 2.5rem 3rem;
+}
+
+.fusion-header {
+  text-align: center;
+  max-width: 580px;
+  margin: 0 auto 2.5rem;
+}
+
+.fusion-header h3 {
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.fusion-header p {
+  font-size: 0.925rem;
+  color: #64748b;
+  line-height: 1.8;
+}
+
+.fusion-compare {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  max-width: 760px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.compare-col {
+  flex: 1;
+  min-width: 220px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.5rem;
+}
+
+.compare-col-highlight {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.compare-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin-bottom: 1.25rem;
+}
+
+.compare-col-highlight .compare-label {
+  color: #2563eb;
+}
+
+.compare-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.compare-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.compare-val {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.highlight-val {
+  color: #1d4ed8;
+}
+
+.compare-key {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.bar-track {
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 100px;
+  overflow: hidden;
+  margin-top: 0.3rem;
+}
+
+.bar-fill {
+  height: 100%;
+  background: #94a3b8;
+  border-radius: 100px;
+}
+
+.bar-fusion {
+  background: #2563eb;
+}
+
+.bar-fpr {
+  background: #f97316;
+}
+
+.bar-fpr-fusion {
+  background: #22c55e;
+}
+
+.fusion-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.fusion-arrow svg {
+  width: 40px;
+  height: 24px;
+}
+
+.fusion-arrow span {
+  font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.fusion-note {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  text-align: center;
+  margin-top: 2rem;
+  line-height: 1.7;
 }
 
 @media (max-width: 768px) {
@@ -266,11 +472,20 @@ const technologies = [
   .benchmark-block { padding: 2rem 1.25rem; }
   .tech-content { padding: 1.75rem 1.25rem; }
   .section-header { margin-bottom: 2.5rem; }
+  .fusion-block { padding: 2rem 1.5rem; }
+  .fusion-compare { gap: 1rem; }
+}
+
+@media (max-width: 600px) {
+  .fusion-compare { flex-direction: column; }
+  .fusion-arrow { flex-direction: column; align-items: center; margin: 0; }
+  .fusion-arrow svg { transform: rotate(90deg); }
 }
 
 @media (max-width: 480px) {
   .stat-value { font-size: 1.5rem; }
   .benchmark-block { padding: 1.5rem 1rem; }
   .tech-pills { gap: 0.35rem; }
+  .fusion-block { padding: 1.5rem 1rem; }
 }
 </style>

@@ -12,8 +12,8 @@
 
       <div class="cards-grid">
         <div v-for="(card, i) in cards" :key="card.title" class="card reveal" :class="`reveal-delay-${(i % 3) + 1}`">
-          <div class="card-icon-wrap">
-            <span class="card-icon">{{ card.icon }}</span>
+          <div class="card-icon-wrap" :style="{ background: card.color + '12', borderColor: card.color + '30' }">
+            <span class="card-abbr" :style="{ color: card.color }">{{ card.abbr }}</span>
           </div>
           <h3 class="card-title">{{ card.title }}</h3>
           <p class="card-text">{{ card.text }}</p>
@@ -39,7 +39,7 @@
                 <div class="step-num-badge">{{ i + 1 }}</div>
               </div>
               <div class="step-body">
-                <div class="step-icon">{{ step.icon }}</div>
+                <div class="step-num">{{ step.num }}</div>
                 <div class="step-label">{{ step.label }}</div>
                 <div class="step-desc">{{ step.desc }}</div>
               </div>
@@ -59,37 +59,43 @@
 <script setup>
 const cards = [
   {
-    icon: '🛰️',
+    abbr: 'HS',
+    color: '#2563eb',
     title: 'Airborne Hyperspectral Imaging',
     text: 'Processes SWIR radiance data from airborne hyperspectral sensors to identify the CH₄ absorption signature. Validated on NASA AVIRIS-NG campaigns over the Permian Basin and California.',
     tags: ['AVIRIS-NG', 'Hyperspectral', 'SWIR'],
   },
   {
-    icon: '🧠',
+    abbr: 'ML',
+    color: '#7c3aed',
     title: 'Physics-Informed Detection',
     text: 'A transformer architecture with adversarial training separates methane plumes from surface reflectance artifacts and atmospheric confounders. Achieves 100% F1 on the critical emitter class.',
     tags: ['Physics-Informed', 'Transformer', 'Adversarial Training'],
   },
   {
-    icon: '📊',
+    abbr: 'ER',
+    color: '#0891b2',
     title: 'Emission Rate Estimation',
     text: 'Plume-integrated emission rates are computed using the Integrated Methane Enhancement (IME) method with coincident wind measurements. Output is reported in kg/hr per source.',
     tags: ['IME Method', 'kg/hr', 'Wind-Coupled'],
   },
   {
-    icon: '📍',
+    abbr: 'SA',
+    color: '#059669',
     title: 'Source Attribution',
     text: 'Detected plumes are geo-referenced and linked to facility-level infrastructure using UTM-projected spatial data, supporting site-specific attribution and reporting.',
     tags: ['Geo-Referenced', 'UTM Projection', 'Facility-Level'],
   },
   {
-    icon: '🗄️',
+    abbr: 'DD',
+    color: '#d97706',
     title: 'Structured Data Deliverables',
     text: 'Detection results are packaged as geo-referenced reports including plume boundaries, emission rates, confidence scores, and wind parameters — ready for integration into existing workflows.',
     tags: ['GeoJSON', 'Detection Reports', 'Plume Metadata'],
   },
   {
-    icon: '🚨',
+    abbr: 'SE',
+    color: '#dc2626',
     title: 'Super-Emitter Identification',
     text: 'Sites are ranked by emission rate to help operators prioritize the highest-impact sources. In the Permian Basin dataset, 130 of 178 detected sites exceeded the critical emitter threshold.',
     tags: ['Ranked Alerts', 'Critical Threshold', 'Permian Basin'],
@@ -98,31 +104,31 @@ const cards = [
 
 const pipeline = [
   {
-    icon: '🛰️',
+    num: '01',
     label: 'Hyperspectral Acquisition',
-    desc: 'Airborne SWIR radiance data collected over the target region',
+    desc: 'SWIR radiance data collected via satellite or aircraft over the target region',
     img: '/images/earth-from-space.jpg',
   },
   {
-    icon: '🤖',
+    num: '02',
     label: 'PHANTOM Model',
     desc: 'Physics-informed transformer detects CH₄ spectral signatures',
     img: '/images/hyperspectral.jpg',
   },
   {
-    icon: '📍',
+    num: '03',
     label: 'Plume Delineation',
     desc: 'Plume boundaries mapped and emission rate estimated in kg/hr',
     img: '/images/emission-sources.jpg',
   },
   {
-    icon: '🗂️',
+    num: '04',
     label: 'Source Attribution',
-    desc: 'Detections geo-referenced and linked to facility-level infrastructure',
+    desc: 'Site-level attribution with emission rates quantified per source',
     img: '/images/drone.jpg',
   },
   {
-    icon: '📋',
+    num: '05',
     label: 'Detection Report',
     desc: 'Structured outputs delivered with rates, confidence, and location data',
     img: '/images/ground-sensors.jpg',
@@ -208,16 +214,21 @@ const pipeline = [
 }
 
 .card-icon-wrap {
-  width: 52px;
-  height: 52px;
-  background: #f0f9ff;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  border: 1px solid;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.card-icon { font-size: 1.6rem; }
+.card-abbr {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
 
 .card-title {
   font-size: 1.1rem;
@@ -354,8 +365,11 @@ const pipeline = [
   padding: 0.9rem;
 }
 
-.step-icon {
-  font-size: 1.2rem;
+.step-num {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #3b82f6;
+  letter-spacing: 0.1em;
   margin-bottom: 0.3rem;
 }
 
@@ -386,23 +400,24 @@ const pipeline = [
 }
 
 @media (max-width: 900px) {
-  .pipeline-steps { flex-wrap: wrap; justify-content: center; gap: 1rem; }
-  .pipeline-arrow { display: none; }
-  .step-card { width: 145px; }
+  .pipeline-steps { flex-direction: column; align-items: center; gap: 0; }
+  .pipeline-step { flex-direction: column; align-items: center; }
+  .pipeline-arrow { width: 24px; height: 32px; display: flex; align-items: center; justify-content: center; transform: rotate(90deg); margin: 2px 0; }
+  .pipeline-arrow svg { width: 32px; height: 16px; }
+  .step-card { width: 280px; }
 }
 
 @media (max-width: 768px) {
   .pipeline { padding: 2.5rem 1.25rem; border-radius: 16px; }
   .pipeline-header { margin-bottom: 2rem; }
-  .pipeline-steps { gap: 0.75rem; }
-  .step-card { width: 140px; }
   .section-header { margin-bottom: 2.5rem; }
+  .step-card { width: 260px; }
 }
 
 @media (max-width: 480px) {
   .pipeline { padding: 2rem 1rem; }
   .cards-grid { gap: 1rem; }
   .card { padding: 1.5rem; }
-  .step-card { width: 130px; }
+  .step-card { width: 100%; max-width: 320px; }
 }
 </style>

@@ -52,16 +52,18 @@ const mapEl   = ref(null)
 const summary = ref(null)
 const loading = ref(true)
 
-// ── Gas plume colormap — blue → cyan → lime → yellow → orange-red ──────────
-// Designed for visibility on brown satellite terrain at any zoom level.
+// ── Gas plume colormap — GHGSat/AVIRIS-NG scientific style ──────────────────
+// deep navy → electric blue → cyan → yellow → orange → red → white
 function thermalRGB(t) {
   t = Math.max(0, Math.min(1, t))
   const stops = [
-    [30,  120, 255],   // t=0.00  bright blue   (low confidence)
-    [0,   220, 255],   // t=0.25  cyan
-    [0,   240,  80],   // t=0.50  lime green
-    [255, 220,   0],   // t=0.75  yellow
-    [255,  60,   0],   // t=1.00  orange-red     (high confidence)
+    [10,   0, 110],   // deep navy      (low enhancement)
+    [0,   55, 230],   // electric blue
+    [0,  200, 255],   // cyan
+    [60, 255, 180],   // cyan-green
+    [255, 230,   0],  // yellow
+    [255,  70,   0],  // orange-red
+    [255, 255, 255],  // white           (peak enhancement)
   ]
   const n   = stops.length - 1
   const idx = Math.min(Math.floor(t * n), n - 1)
@@ -74,165 +76,171 @@ function thermalRGB(t) {
   ]
 }
 
-// ── Animate plumes inside real polygon boundaries ─────────────────────────────
-// Strategy:
-//   • Wind direction  = vector from emission source → polygon centroid (geometry-derived)
-//   • Wind speed      = U_10_ms from dataset
-//   • Color intensity = mean_conf mapped through thermal colormap
-//   • 3 gradient "puffs" cycle along the wind axis, clipped to polygon shape
-//   • Radial turbulence blobs add lateral dispersion inside the boundary
+// ── Realistic Gaussian plume simulation ──────────────────────────────────────
+// Inspired by 2-D Stable Fluids (advect + diffuse) but rendered on a 2-D canvas.
+// Physics:
+//   • Wind direction from measured wind_direction_deg (meteorological "from" convention)
+//   • Color mapped to Q_kg_hr on a log scale (blue=low, red=high)
+//   • Layer A — static Gaussian concentration backbone (σ grows with √distance)
+//   • Layer B — animated Lagrangian puffs (RK2-like advection + Langevin lateral noise)
+//   • Layer C — pulsing hot source core
+//   • All layers clipped to the real polygon boundary
 
-function animatePlumes(canvas, map, emissions, confMin, confMax) {
+function animatePlumes(canvas, map, pane, emissions, qMin, qMax) {
   const ctx = canvas.getContext('2d')
   const startTime = performance.now()
   let raf
+  const mapPaneEl = map.getPane('mapPane')
+
+  // Log-scale normalisation: spreads the 16–3358 kg/hr range more evenly
+  const logQMin = Math.log(qMin + 1)
+  const logQMax = Math.log(qMax + 1)
+  function normQ(q) {
+    return Math.max(0, Math.min(1,
+      (Math.log(q + 1) - logQMin) / (logQMax - logQMin + 1e-9)))
+  }
 
   function frame() {
     const t = (performance.now() - startTime) / 1000
     const W = canvas.width, H = canvas.height
+
+    // Counteract the map-pane's pan transform so the canvas stays viewport-aligned.
+    // latLngToContainerPoint() then gives correct canvas coordinates.
+    const pos = L.DomUtil.getPosition(mapPaneEl)
+    pane.style.left = (-pos.x) + 'px'
+    pane.style.top  = (-pos.y) + 'px'
+
     ctx.clearRect(0, 0, W, H)
 
     emissions.forEach(row => {
-      if (!row.plume || !row.plume.polygons.length) return
+      if (!row.plume?.polygons?.length) return
 
       const src = map.latLngToContainerPoint(L.latLng(row.latitude, row.longitude))
+      if (src.x < -300 || src.x > W + 300 || src.y < -300 || src.y > H + 300) return
 
-      // Skip if source point is far off-screen
-      if (src.x < -200 || src.x > W + 200 || src.y < -200 || src.y > H + 200) return
+      // Color by emission rate Q_kg_hr (log scale)
+      const qN = normQ(row.Q_kg_hr)
+      const [cr, cg, cb] = thermalRGB(qN)
 
-      const ct = (row.plume.mean_conf - confMin) / (confMax - confMin + 1e-6)
-      const [cr, cg, cb] = thermalRGB(ct)
-      const strength = Math.min(row.Q_kg_hr / 2500, 1)
-      const windPx   = (row.U_10_ms || 3) * 5
+      // Wind: gas moves OPPOSITE to meteorological "from" direction
+      const windFromDeg = row.wind_direction_deg ?? 225
+      const windToDeg   = (windFromDeg + 180) % 360
+      const windToRad   = windToDeg * Math.PI / 180
+      // Slow whole-plume meander: ±12° oscillation (real wind direction variance)
+      const meander = 0.21 * Math.sin(t * 0.25 + row.latitude * 4.2)
+      const effRad  = windToRad + meander
+      // Screen: north = –y, east = +x
+      const nx =  Math.sin(effRad)   // along-wind  x
+      const ny = -Math.cos(effRad)   // along-wind  y  (screen y flips N/S)
+      const lx =  ny                 // lateral     x  (perpendicular)
+      const ly = -nx                 // lateral     y
 
-      // Project ALL polygon points to screen space (needed for outlines + clip)
+      // Project all sub-polygons to screen
       const allPtSets = row.plume.polygons
-        .map(polygon => polygon.map(([lat, lon]) => {
+        .map(poly => poly.map(([lat, lon]) => {
           const p = map.latLngToContainerPoint(L.latLng(lat, lon))
           return { x: p.x, y: p.y }
         }))
         .filter(pts => pts.length >= 3)
       if (!allPtSets.length) return
 
-      // Find the largest polygon to derive wind direction and clip region
-      let bestPts = null, bestArea = 0
-      allPtSets.forEach(pts => {
-        const bx0 = Math.min(...pts.map(p => p.x)), bx1 = Math.max(...pts.map(p => p.x))
-        const by0 = Math.min(...pts.map(p => p.y)), by1 = Math.max(...pts.map(p => p.y))
-        const area = (bx1 - bx0) * (by1 - by0)
-        if (area > bestArea) { bestArea = area; bestPts = pts }
-      })
-      if (!bestPts) return
+      // Bounding box → scale parameters
+      const allPts = allPtSets.flat()
+      const bx0 = Math.min(...allPts.map(p => p.x)), bx1 = Math.max(...allPts.map(p => p.x))
+      const by0 = Math.min(...allPts.map(p => p.y)), by1 = Math.max(...allPts.map(p => p.y))
+      const polyDiag = Math.sqrt((bx1 - bx0) ** 2 + (by1 - by0) ** 2)
+      if (polyDiag < 3) return   // too small at current zoom
 
-      // Wind direction: source → polygon centroid (works at any zoom)
-      const cx = bestPts.reduce((s, p) => s + p.x, 0) / bestPts.length
-      const cy = bestPts.reduce((s, p) => s + p.y, 0) / bestPts.length
-      const dx = cx - src.x, dy = cy - src.y
-      const pixDist = Math.sqrt(dx * dx + dy * dy)
+      const polyLen  = Math.max(polyDiag, 15)
+      const sig0     = Math.max(polyDiag * 0.07, 4)   // initial σ at source
+      const puffLife = 4.0                              // seconds per puff cycle
+      const strength = 0.65 + qN * 0.35               // opacity multiplier (0.65–1.0)
 
-      // Normalised wind direction (fallback: upward if polygon is co-located)
-      const nx = pixDist > 0.5 ? dx / pixDist : 0
-      const ny = pixDist > 0.5 ? dy / pixDist : -1
-      const px = -ny, py = nx   // perpendicular
-
-      // ── SMOKE SIMULATION ──────────────────────────────────────────────────
-      // All radii are proportional to polyDiag so the effect scales correctly
-      // at any zoom level. Union-clip of all polygons contains everything.
-      const polyDiag = Math.sqrt(bestArea)
-      const polyLen  = Math.max(polyDiag, 20)
-      // Base radius unit: 18% of polygon diagonal, min 6px so zoom-out is visible
-      const R0       = Math.max(polyDiag * 0.18, 6)
-      const cycleSec = Math.max(polyLen / (windPx + 0.1), 0.5)
-
+      // Clip everything to the actual polygon boundary
       ctx.save()
-      ctx.globalCompositeOperation = 'source-over'
       ctx.beginPath()
       allPtSets.forEach(pts => {
         ctx.moveTo(pts[0].x, pts[0].y)
         for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y)
         ctx.closePath()
       })
-      ctx.clip()   // union clip — smoke stays inside every sub-polygon
+      ctx.clip()
 
-      // ── Layer A: Static Gaussian density spine ─────────────────────────────
-      // Overlapping circles along the wind axis with Gaussian spread + decay.
-      // Always visible at any zoom — gives the "plume shape" even when paused.
-      const N_SPINE = 22
+      // ── Layer A: Dense concentration backbone ───────────────────────────────
+      const N_SPINE = 42
       for (let k = 0; k < N_SPINE; k++) {
-        const frac = k / (N_SPINE - 1)
-        const bx   = src.x + nx * polyLen * frac
-        const by   = src.y + ny * polyLen * frac
-        // Radius grows with distance (diffusion spreading)
-        const r = R0 * (0.7 + frac * 2.8)
-        // Alpha decays exponentially from source (concentration drops with distance)
-        const a = Math.exp(-frac * 2.2) * (0.22 + strength * 0.18)
-        const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
-        rg.addColorStop(0,   `rgba(${cr},${cg},${cb},${a})`)
-        rg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${a * 0.5})`)
-        rg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
+        const frac  = k / (N_SPINE - 1)
+        const dist  = frac * polyLen
+        const sigma = sig0 * (1 + Math.sqrt(frac) * 2.5)
+        const conc  = Math.exp(-frac * 2.8)
+        // Tight lateral meander — narrow coherent spine like real plume backbone
+        const lat   = sigma * 0.08 * Math.sin(t * 0.28 + frac * Math.PI * 1.5)
+
+        const bx = src.x + nx * dist + lx * lat
+        const by = src.y + ny * dist + ly * lat
+        const a  = conc * strength * 0.28
+        if (a < 0.006) continue
+
+        const rg = ctx.createRadialGradient(bx, by, 0, bx, by, sigma)
+        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${Math.min(a, 0.82)})`)
+        rg.addColorStop(0.45, `rgba(${cr},${cg},${cb},${a * 0.45})`)
+        rg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
         ctx.fillStyle = rg
-        ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
+        ctx.beginPath(); ctx.arc(bx, by, sigma, 0, Math.PI * 2); ctx.fill()
       }
 
-      // ── Layer B: Animated turbulent puffs ─────────────────────────────────
-      // Two-frequency lateral wobble (golden-ratio seeds) gives non-repeating
-      // organic motion visible at every zoom level.
-      const N_PUFFS = 24
+      // ── Layer B: Meandering Lagrangian puffs ─────────────────────────────
+      // Multi-scale turbulent lateral displacement (three nested eddy scales):
+      //   Large  (~25 s period): whole-plume meander visible as snaking motion
+      //   Medium (~7 s period) : inter-puff mixing, plume width variation
+      //   Small  (~2 s period) : fast turbulent shredding near source
+      // σ grows with √frac (Fickian diffusion). Each puff has a unique phase
+      // seeded by its index k so paths don't overlap.
+      const N_PUFFS = 80
       for (let k = 0; k < N_PUFFS; k++) {
-        const kP = ((t / cycleSec) + k / N_PUFFS) % 1
-        const lat = R0 * 2.2 * (
-          0.60 * Math.sin(t * 0.70 + k * 1.618 + kP * Math.PI) +
-          0.40 * Math.sin(t * 1.45 + k * 2.937 + kP * Math.PI * 1.9)
+        const phase = k / N_PUFFS
+        const frac  = (t / puffLife + phase) % 1
+        const dist  = frac * polyLen
+        const sigma = sig0 * (0.35 + Math.sqrt(frac) * 2.5)
+
+        // Three-scale lateral turbulence — tightened amplitudes for denser, coherent plume
+        const lat = sigma * (
+          0.72 * Math.sin(t * 0.22 + k * 1.618 + phase * 3.14) +   // large slow eddy
+          0.36 * Math.sin(t * 0.90 + k * 2.718 + frac  * 6.28) +   // medium eddy
+          0.14 * Math.sin(t * 2.60 + k * 4.130 + frac  * 9.42)     // small fast eddy
         )
-        const bx = src.x + nx * polyLen * kP + px * lat
-        const by = src.y + ny * polyLen * kP + py * lat
-        // Puffs start tight at source, expand as they travel
-        const r  = R0 * (0.4 + kP * 2.4)
-        // Asymmetric envelope: fast in, slow out
-        const fadeIn  = Math.min(kP / 0.10, 1)
-        const fadeOut = kP > 0.60 ? Math.max(0, 1 - (kP - 0.60) / 0.40) : 1
-        const a = fadeIn * fadeOut * (0.28 + strength * 0.16)
-        if (a < 0.01) continue
+
+        const bx = src.x + nx * dist + lx * lat
+        const by = src.y + ny * dist + ly * lat
+
+        const conc    = Math.exp(-frac * 1.6)
+        const fadeIn  = Math.min(frac / 0.04, 1)
+        const fadeOut = frac > 0.82 ? Math.max(0, 1 - (frac - 0.82) / 0.18) : 1
+        const a = conc * fadeIn * fadeOut * strength * 0.62
+        if (a < 0.006) continue
+
+        const r  = sigma * 1.1
         const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
-        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${a})`)
-        rg.addColorStop(0.40, `rgba(${cr},${cg},${cb},${a * 0.65})`)
-        rg.addColorStop(0.80, `rgba(${cr},${cg},${cb},${a * 0.20})`)
+        rg.addColorStop(0,    `rgba(${cr},${cg},${cb},${Math.min(a, 0.95)})`)
+        rg.addColorStop(0.32, `rgba(${cr},${cg},${cb},${a * 0.62})`)
+        rg.addColorStop(0.68, `rgba(${cr},${cg},${cb},${a * 0.20})`)
         rg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
         ctx.fillStyle = rg
         ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
       }
 
-      // ── Layer C: Dense rolling wisps near source ───────────────────────────
-      const N_WISPS = 10
-      for (let k = 0; k < N_WISPS; k++) {
-        const kP  = ((t / (cycleSec * 0.6)) + k / N_WISPS) % 1
-        const frac = kP * 0.45   // wisps fill only first 45% (near source)
-        const lat  = R0 * 1.2 * Math.sin(t * 1.0 + k * 1.618)
-        const bx   = src.x + nx * polyLen * frac + px * lat
-        const by   = src.y + ny * polyLen * frac + py * lat
-        const r    = R0 * (0.5 + kP * 1.2)
-        const a    = Math.sin(kP * Math.PI) * (0.35 + strength * 0.20)
-        if (a < 0.01) continue
-        const rg = ctx.createRadialGradient(bx, by, 0, bx, by, r)
-        rg.addColorStop(0,   `rgba(${cr},${cg},${cb},${a})`)
-        rg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${a * 0.55})`)
-        rg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
-        ctx.fillStyle = rg
-        ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill()
-      }
-
-      // ── Layer D: Pulsing hot source point ─────────────────────────────────
-      const pulse = 0.70 + 0.30 * Math.sin(t * 2.5 + row.latitude * 10)
-      const glowR = Math.max(R0 * 0.7, 5)
-      const sg = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, glowR)
-      sg.addColorStop(0,   `rgba(255,255,220,${0.80 * pulse})`)
-      sg.addColorStop(0.3, `rgba(${cr},${cg},${cb},${0.60 * pulse})`)
-      sg.addColorStop(0.7, `rgba(${cr},${cg},${cb},${0.22 * pulse})`)
-      sg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`)
+      // ── Layer C: Hot pulsing source core ──────────────────────────────────
+      const pulse = 0.82 + 0.18 * Math.sin(t * 2.8 + row.latitude * 6)
+      const srcR  = Math.max(sig0 * 1.3, 6)
+      const sg = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, srcR)
+      sg.addColorStop(0,    `rgba(255,252,220,${0.92 * pulse})`)
+      sg.addColorStop(0.30, `rgba(${cr},${cg},${cb},${0.72 * pulse})`)
+      sg.addColorStop(0.65, `rgba(${cr},${cg},${cb},${0.20 * pulse})`)
+      sg.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`)
       ctx.fillStyle = sg
-      ctx.beginPath(); ctx.arc(src.x, src.y, glowR, 0, Math.PI * 2); ctx.fill()
+      ctx.beginPath(); ctx.arc(src.x, src.y, srcR, 0, Math.PI * 2); ctx.fill()
 
-      ctx.restore()   // removes union clip
+      ctx.restore()
     })
 
     raf = requestAnimationFrame(frame)
@@ -254,10 +262,10 @@ onMounted(async () => {
 
   const emissions = data.emissions
 
-  // Confidence range for thermal normalization
-  const confs   = emissions.filter(r => r.plume).map(r => r.plume.mean_conf)
-  const confMin = Math.min(...confs)
-  const confMax = Math.max(...confs)
+  // Emission rate range for colormap normalization (log scale in animatePlumes)
+  const qs   = emissions.map(r => r.Q_kg_hr)
+  const qMin = Math.min(...qs)
+  const qMax = Math.max(...qs)
 
   // ── Leaflet map ─────────────────────────────────────────────────────────────
   mapInstance = L.map(mapEl.value, {
@@ -276,16 +284,25 @@ onMounted(async () => {
   satellite.addTo(mapInstance)
   L.control.layers({ 'Satellite': satellite, 'Street Map': streets }, {}, { position: 'topright' }).addTo(mapInstance)
 
-  // ── Canvas directly inside Leaflet container at z-index 450 ──────────────────
-  // z-index 450 sits above the leaflet-map-pane stacking context (z=400).
-  // Being inside mapEl (which Leaflet doesn't CSS-transform) keeps it stable
-  // during pan/zoom. latLngToContainerPoint() is measured from mapEl, so
-  // coordinates map exactly onto this canvas.
+  // ── Custom Leaflet pane for the plume canvas ─────────────────────────────────
+  // All Leaflet panes live inside .leaflet-map-pane, which has a CSS transform
+  // (translate3d) that creates its own stacking context. z-indices on pane
+  // children are therefore evaluated WITHIN that stacking context:
+  //   tile-pane: 200  |  overlay-pane: 400  |  marker-pane: 600  |  popup-pane: 700
+  // A canvas at z-500 (inside this stacking context) sits above tiles/overlays
+  // but below markers and popups — exactly what we need.
+  //
+  // Pan compensation: the map-pane transform shifts during drag. We counteract
+  // it each frame via L.DomUtil.getPosition so the canvas stays viewport-aligned
+  // while we can continue using latLngToContainerPoint for coordinates.
+  mapInstance.createPane('plumesPane')
+  const plumesPane = mapInstance.getPane('plumesPane')
+  plumesPane.style.zIndex = '500'
+  plumesPane.style.pointerEvents = 'none'
+
   const canvas = document.createElement('canvas')
-  // z-index must be > 400 (.leaflet-pane z-index) so the canvas renders
-  // above the entire leaflet-map-pane stacking context, not behind it.
-  canvas.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:450;'
-  mapEl.value.appendChild(canvas)
+  canvas.style.cssText = 'position:absolute;pointer-events:none;'
+  plumesPane.appendChild(canvas)
 
   function resizeCanvas() {
     canvas.width  = mapEl.value.offsetWidth
@@ -295,7 +312,7 @@ onMounted(async () => {
   new ResizeObserver(resizeCanvas).observe(mapEl.value)
 
   // Start animation (re-projects polygons every frame — handles pan/zoom correctly)
-  stopAnim = animatePlumes(canvas, mapInstance, emissions, confMin, confMax)
+  stopAnim = animatePlumes(canvas, mapInstance, plumesPane, emissions, qMin, qMax)
 
   // ── Markers + popups ────────────────────────────────────────────────────────
   emissions.forEach(row => {
@@ -319,7 +336,7 @@ onMounted(async () => {
       </tr>` : ''
 
     const popup = `
-      <div style="font-family:Inter,sans-serif;width:300px;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.15);">
+      <div style="font-family:inherit;width:300px;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.15);">
         <div style="background:${markerColor};color:#fff;padding:14px 16px;">
           <div style="font-weight:700;font-size:0.9rem;opacity:0.85;">${row.emission_category} Emission</div>
           <div style="font-size:1.7rem;font-weight:800;margin-top:2px;">${row.Q_kg_hr.toFixed(1)}<span style="font-size:0.9rem;font-weight:500;"> kg/hr</span></div>
@@ -360,13 +377,13 @@ onMounted(async () => {
   legend.onAdd = () => {
     const div = L.DomUtil.create('div')
     div.innerHTML = `
-      <div style="background:rgba(15,23,42,0.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 16px;font-family:Inter,sans-serif;font-size:0.75rem;color:#fff;min-width:200px;">
-        <div style="font-weight:700;margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase;color:#94a3b8;">Plume Intensity</div>
+      <div style="background:rgba(15,23,42,0.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 16px;font-family:inherit;font-size:0.75rem;color:#fff;min-width:200px;">
+        <div style="font-weight:700;margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase;color:#94a3b8;">Emission Rate</div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <div style="flex:1;height:10px;border-radius:4px;background:linear-gradient(to right,rgb(30,120,255),rgb(0,220,255),rgb(0,240,80),rgb(255,220,0),rgb(255,60,0));"></div>
+          <div style="flex:1;height:10px;border-radius:4px;background:linear-gradient(to right,rgb(10,0,110),rgb(0,55,230),rgb(0,200,255),rgb(60,255,180),rgb(255,230,0),rgb(255,70,0),rgb(255,255,255));"></div>
         </div>
         <div style="display:flex;justify-content:space-between;color:#94a3b8;margin-bottom:14px;font-size:0.7rem;">
-          <span>Low (${(confMin*100).toFixed(1)}%)</span><span>High (${(confMax*100).toFixed(1)}%)</span>
+          <span>Low (${qMin.toFixed(0)} kg/hr)</span><span>High (${qMax.toFixed(0)} kg/hr)</span>
         </div>
         <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:10px;">
           <div style="font-weight:700;margin-bottom:8px;letter-spacing:0.06em;text-transform:uppercase;color:#94a3b8;">Emitter Markers</div>
