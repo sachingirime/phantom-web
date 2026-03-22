@@ -10,7 +10,7 @@
         Greenhouse gas intelligent sensing that you can trust
       </p>
       <p class="hero-subtitle reveal reveal-delay-2">
-        Methane detection and emission rate estimation from airborne hyperspectral imagery,
+        End-to-end methane sensing — from raw hyperspectral radiance to plume detection, emission quantification, source attribution, and structured reporting,
         validated on NASA AVIRIS-NG flight campaigns over the Permian Basin.
       </p>
       <div class="hero-stats reveal reveal-delay-3">
@@ -23,11 +23,11 @@
           <span class="stat-label">F1, Standard Class</span>
         </div>
         <div class="stat">
-          <span class="stat-value">97 kg/hr</span>
+          <span class="stat-value">97 Kg/hr</span>
           <span class="stat-label">Min. Verified Detection</span>
         </div>
         <div class="stat">
-          <span class="stat-value">16 kg/hr</span>
+          <span class="stat-value">16 Kg/hr</span>
           <span class="stat-label">Lowest Observed Detection</span>
         </div>
         <div class="stat">
@@ -230,11 +230,14 @@ function scrollTo(id) {
   .hero { padding: 6rem 1.25rem 3.5rem; }
   .hero-badge { font-size: 0.68rem; padding: 0.35rem 1rem; text-align: center; }
   .hero-stats {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
-  .stat:nth-child(3) { border-right: none; }
-  .stat:nth-child(4), .stat:nth-child(5) { border-top: 1px solid rgba(255,255,255,0.07); }
-  .stat:nth-child(5) { border-right: none; grid-column: span 1; }
+  .stat:nth-child(2),
+  .stat:nth-child(4) { border-right: none; }
+  .stat:nth-child(3),
+  .stat:nth-child(4),
+  .stat:nth-child(5) { border-top: 1px solid rgba(255,255,255,0.07); }
+  .stat:nth-child(5) { grid-column: span 2; border-right: none; }
   .hero-actions { flex-direction: column; align-items: center; }
   .btn-primary, .btn-ghost { width: 100%; max-width: 320px; text-align: center; }
 }

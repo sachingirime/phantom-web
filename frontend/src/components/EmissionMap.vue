@@ -274,7 +274,7 @@ onMounted(async () => {
   // ── Leaflet map ─────────────────────────────────────────────────────────────
   mapInstance = L.map(mapEl.value, {
     center: [32.33, -101.81],
-    zoom: 12,
+    zoom: 14,
     scrollWheelZoom: true,
   })
 
