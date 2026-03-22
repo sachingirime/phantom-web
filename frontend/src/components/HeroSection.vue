@@ -4,7 +4,7 @@
     <div class="hero-content">
       <div class="hero-badge reveal">
         <span class="badge-icon">📡</span>
-        Permian Basin &nbsp;·&nbsp; AI-Validated Detection
+        NASA Imagery Validated
       </div>
       <h1 class="hero-title reveal reveal-delay-1">PHANTOM</h1>
       <p class="hero-acronym reveal reveal-delay-2">
