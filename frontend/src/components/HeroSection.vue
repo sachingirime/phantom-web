@@ -3,41 +3,40 @@
     <div class="hero-bg" />
     <div class="hero-content">
       <div class="hero-badge reveal">
-        <span class="badge-icon">📡</span>
-        NASA Imagery Validated
+        Validated on NASA AVIRIS-NG
       </div>
       <h1 class="hero-title reveal reveal-delay-1">PHANTOM</h1>
       <p class="hero-acronym reveal reveal-delay-2">
         Physics-Informed Hyperspectral Adversarial Network for Transformer-Optimized Methane Detection
       </p>
       <p class="hero-subtitle reveal reveal-delay-2">
-        AI-driven methane detection and quantification from aerial hyperspectral imagery —
-        validated on NASA AVIRIS-NG data, delivering actionable emission intelligence at scale.
+        Methane detection and emission rate estimation from airborne hyperspectral imagery,
+        validated on NASA AVIRIS-NG flight campaigns over the Permian Basin.
       </p>
       <div class="hero-stats reveal reveal-delay-3">
         <div class="stat">
-          <span class="stat-value">4×</span>
-          <span class="stat-label">More Accurate</span>
+          <span class="stat-value">100%</span>
+          <span class="stat-label">F1, Critical Emitters</span>
         </div>
         <div class="stat-divider" />
         <div class="stat">
-          <span class="stat-value">100%</span>
-          <span class="stat-label">F1 on Critical Emitters</span>
+          <span class="stat-value">96.65%</span>
+          <span class="stat-label">F1, Standard Class</span>
         </div>
         <div class="stat-divider" />
         <div class="stat">
           <span class="stat-value">97 kg/hr</span>
-          <span class="stat-label">Min. Detection Limit</span>
+          <span class="stat-label">Detection Limit</span>
         </div>
         <div class="stat-divider" />
         <div class="stat">
           <span class="stat-value">178</span>
-          <span class="stat-label">Sites Detected</span>
+          <span class="stat-label">Sites, Permian Basin</span>
         </div>
       </div>
       <div class="hero-actions reveal reveal-delay-4">
         <a href="#detection-map" @click.prevent="scrollTo('detection-map')" class="btn-primary">View Detection Map</a>
-        <a href="#what-we-do" @click.prevent="scrollTo('what-we-do')" class="btn-ghost">What We Do</a>
+        <a href="#what-we-do" @click.prevent="scrollTo('what-we-do')" class="btn-ghost">How It Works</a>
       </div>
     </div>
   </section>
@@ -98,7 +97,6 @@ function scrollTo(id) {
   text-transform: uppercase;
 }
 
-.badge-icon { font-size: 0.85rem; }
 
 .hero-title {
   font-family: 'Space Grotesk', 'Inter', sans-serif;

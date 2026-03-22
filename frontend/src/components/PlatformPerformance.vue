@@ -4,14 +4,14 @@
       <div class="section-header">
         <span class="section-tag">Validation</span>
         <h2>Platform Performance</h2>
-        <p>AI-driven methane detection validated on real-world NASA AVIRIS-NG satellite data</p>
+        <p>Model performance evaluated on NASA AVIRIS-NG airborne hyperspectral flight campaigns</p>
       </div>
 
       <div class="benchmark-block">
         <div class="benchmark-inner">
           <div class="benchmark-left">
             <h3>Benchmark Results</h3>
-            <p>Validated on the full AVIRIS-NG California and Permian Basin flight campaigns with diverse terrain and environmental conditions. Outperforms existing detection methods by a factor of 4×.</p>
+            <p>Evaluated on AVIRIS-NG California and Permian Basin flight campaigns across diverse terrain and atmospheric conditions. F1 score is 4× higher than the matched-filter baseline on the standard emitter class.</p>
           </div>
           <div class="stats-grid">
             <div v-for="stat in stats" :key="stat.label" class="stat-item">
@@ -21,21 +21,18 @@
           </div>
         </div>
         <div class="benchmark-note">
-          <span>📡</span> Validated on NASA AVIRIS-NG hyperspectral imagery across real-world emission events ·
-          Tested on diverse geographic locations and environmental conditions
+          NASA AVIRIS-NG airborne hyperspectral imagery · Permian Basin and California flight campaigns · Diverse terrain and environmental conditions
         </div>
       </div>
 
       <div class="tech-block">
         <div class="tech-content">
-          <h4>Technical Innovation</h4>
+          <h4>Technical Approach</h4>
           <p>
-            PHANTOM represents a breakthrough in methane detection technology by combining
-            physics-informed neural networks with transformer-based architecture. Our system
-            processes Short Wave Infrared spectral bands from hyperspectral sensors, applying
-            matched filter preprocessing and adversarial training to achieve state-of-the-art
-            performance. The platform delivers exceptional accuracy — outperforming existing
-            detection methods by a factor of four.
+            PHANTOM combines physics-informed neural networks with a transformer-based architecture
+            trained adversarially on matched-filter preprocessed SWIR hyperspectral data.
+            The model is designed to separate the CH₄ absorption feature from surface reflectance
+            and atmospheric confounders — conditions that cause false positives in classical approaches.
           </p>
           <div class="tech-pills">
             <span v-for="tech in technologies" :key="tech" class="pill">{{ tech }}</span>

@@ -1,7 +1,9 @@
 <template>
   <nav class="navbar" :class="{ scrolled: isScrolled }">
     <div class="nav-inner">
-      <span class="nav-logo" @click="scrollTo('top')">PHANTOM</span>
+      <span class="nav-logo" @click="scrollTo('top')">
+        <img src="/images/phantom_logo_nobg.png" alt="PHANTOM" class="nav-logo-img" />
+      </span>
 
       <div class="nav-links">
         <a @click.prevent="scrollTo('what-we-do')" href="#">What We Do</a>
@@ -85,13 +87,18 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 }
 
 .nav-logo {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: 0.14em;
   flex-shrink: 0;
   cursor: pointer;
   user-select: none;
+  display: flex;
+  align-items: center;
+}
+
+.nav-logo-img {
+  height: 36px;
+  width: auto;
+  display: block;
+  filter: brightness(1.1);
 }
 
 .nav-links {

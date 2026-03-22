@@ -5,11 +5,8 @@
         <div class="footer-brand">
           <h2 class="footer-logo">PHANTOM</h2>
           <p class="footer-desc">
-            Advanced AI platform for methane emission detection and quantification
-            from hyperspectral satellite imagery.
-          </p>
-          <p class="footer-affiliation">
-            MESA Lab · University of California, Merced
+            Methane detection and emission rate estimation from airborne hyperspectral imagery.
+            Research platform developed at MESA Lab, UC Merced.
           </p>
         </div>
         <div class="footer-nav">

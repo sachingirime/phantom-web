@@ -2,11 +2,11 @@
   <section id="methane" class="section section-dark">
     <div class="container">
       <div class="section-header">
-        <span class="section-tag">Climate Impact</span>
-        <h2>Why Methane Concerns Matter</h2>
+        <span class="section-tag">Climate Context</span>
+        <h2>Why Methane Matters</h2>
         <p>
-          Methane is responsible for 30% of global warming since pre-industrial times.
-          Detecting and reducing methane emissions is our fastest opportunity to slow climate change in the next decade.
+          Methane is responsible for approximately 30% of observed warming since pre-industrial times.
+          Its short atmospheric lifetime makes emission reductions among the fastest-acting levers available for near-term climate response.
         </p>
       </div>
 
@@ -24,11 +24,10 @@
           <div class="sources-block">
             <span class="block-tag">Major Emission Sources</span>
             <p>
-              Human activities release methane from three primary sectors: fossil fuels (oil,
-              gas, and coal operations), agriculture (livestock enteric fermentation and rice cultivation),
-              and waste management (landfills and wastewater treatment). Natural sources — wetlands and
-              other ecosystems — also contribute, but anthropogenic emissions represent the fastest and
-              most controllable reduction opportunity.
+              Anthropogenic methane emissions originate primarily from fossil fuel operations (oil, gas, and coal),
+              agriculture (livestock and rice cultivation), and waste management (landfills and wastewater).
+              Natural sources such as wetlands also contribute. Anthropogenic sources represent the most
+              tractable near-term reduction opportunity.
             </p>
             <div class="img-wrap tall infographic">
               <img src="/images/methane-sources.png" alt="Methane emission sources" />
@@ -36,13 +35,12 @@
           </div>
 
           <div class="sources-block">
-            <span class="block-tag">Satellite Detection Importance</span>
+            <span class="block-tag">The Case for Remote Sensing</span>
             <p>
-              Traditional ground-based monitoring covers less than 5% of global emission sites.
-              Satellite hyperspectral imaging enables complete, objective global coverage — tracking
-              emissions from remote oil fields, wetlands, and agricultural regions that would otherwise
-              go undetected. PHANTOM makes this data actionable through AI-driven detection and
-              real-time quantification, enabling targeted mitigation at the largest sources.
+              Ground-based monitoring networks cover only a fraction of global emission sites.
+              Airborne and satellite hyperspectral imaging enables spatially comprehensive, objective
+              detection — including remote or inaccessible areas. Automated detection and quantification
+              make it possible to systematically identify and rank emission sources across large regions.
             </p>
             <div class="img-wrap tall infographic">
               <img src="/images/climate-impact.png" alt="Climate impact of methane" />
@@ -57,9 +55,9 @@
             <img src="/images/atmospheric-concentration.png" alt="Atmospheric methane concentration trend" />
           </div>
           <p class="img-caption">
-            Global atmospheric methane concentration has risen sharply since industrialization,
-            now exceeding 1,900 ppb — nearly triple pre-industrial levels. Rapid detection and
-            mitigation are critical to reversing this trend.
+            Global atmospheric methane concentration has increased from approximately 700 ppb
+            pre-industrially to over 1,900 ppb today. The rate of increase has accelerated
+            since 2007, with the drivers still under active scientific investigation.
           </p>
         </div>
       </div>
@@ -71,18 +69,18 @@
 const impactCards = [
   {
     number: '80×',
-    title: 'Warming Potential',
-    text: 'Methane traps 80 times more heat than CO₂ over a 20-year period, making it the most critical greenhouse gas for immediate climate action.',
+    title: 'GWP over 20 Years',
+    text: 'Methane has a global warming potential 80 times that of CO₂ on a 20-year timescale (GWP-20), making it the highest-priority short-lived climate pollutant.',
   },
   {
     number: '30%',
-    title: 'Global Warming Contribution',
-    text: 'Responsible for approximately 30% of global temperature rise. Its potency makes it second only to carbon dioxide in overall climate impact.',
+    title: 'Share of Observed Warming',
+    text: 'Atmospheric methane is estimated to account for roughly 30% of warming since the pre-industrial era, second only to CO₂ in total radiative forcing contribution.',
   },
   {
     number: '45%',
-    title: 'Reduction Potential by 2030',
-    text: 'Cutting methane emissions by 45% by 2030 could prevent 0.3°C of warming by 2040 — our fastest and most cost-effective climate solution.',
+    title: 'Achievable Reduction by 2030',
+    text: 'The Global Methane Pledge projects a 45% reduction in anthropogenic methane by 2030 could limit warming by approximately 0.3°C by the 2040s.',
   },
 ]
 </script>

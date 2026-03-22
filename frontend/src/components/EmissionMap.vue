@@ -2,12 +2,12 @@
   <section id="detection-map" class="section">
     <div class="container">
       <div class="section-header">
-        <span class="section-tag">Validated Detection Dataset · Permian Basin</span>
+        <span class="section-tag">Permian Basin · NASA AVIRIS-NG Dataset</span>
         <h2>Emission Detection Map</h2>
         <p>
-          Methane plumes detected and quantified by PHANTOM across the Permian Basin, Texas.
-          Plume boundaries animated by real wind speed and inferred direction.
-          Data sourced from NASA AVIRIS-NG hyperspectral flight campaigns.
+          178 methane sources detected and quantified across the Permian Basin, Texas.
+          Plume extents and emission rates derived from NASA AVIRIS-NG hyperspectral imagery.
+          Wind-driven animation is based on coincident surface wind measurements.
         </p>
       </div>
 

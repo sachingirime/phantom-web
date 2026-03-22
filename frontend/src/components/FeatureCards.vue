@@ -4,9 +4,9 @@
       <div class="section-header">
         <h2>What We Do</h2>
         <p>
-          PHANTOM combines physics-informed AI with satellite hyperspectral remote sensing to detect,
-          quantify, and deliver methane emission intelligence — from orbital detection to ground-level
-          verification and actionable data services.
+          PHANTOM processes airborne hyperspectral imagery to detect methane plumes, estimate
+          emission rates, and attribute sources — covering the full workflow from raw sensor
+          data to structured detection reports.
         </p>
       </div>
 
@@ -27,8 +27,8 @@
       <div class="pipeline">
         <div class="pipeline-header">
           <span class="section-tag">End-to-End Workflow</span>
-          <h3>From Satellite to Action</h3>
-          <p>A fully automated pipeline from raw hyperspectral data to verified, actionable emission intelligence</p>
+          <h3>From Sensor to Report</h3>
+          <p>The end-to-end workflow from raw hyperspectral radiance data to geo-referenced emission reports</p>
         </div>
 
         <div class="pipeline-steps">
@@ -60,71 +60,71 @@
 const cards = [
   {
     icon: '🛰️',
-    title: 'Aerial & Satellite Detection',
-    text: 'We process data from airborne and satellite hyperspectral platforms to detect the invisible spectral signature of methane gas — even in complex landscapes and terrains. Validated on NASA AVIRIS-NG flight campaigns across the Permian Basin and California.',
+    title: 'Airborne Hyperspectral Imaging',
+    text: 'Processes SWIR radiance data from airborne hyperspectral sensors to identify the CH₄ absorption signature. Validated on NASA AVIRIS-NG campaigns over the Permian Basin and California.',
     tags: ['AVIRIS-NG', 'Hyperspectral', 'SWIR'],
   },
   {
     icon: '🧠',
-    title: 'AI-Powered Analysis',
-    text: 'PHANTOM\'s physics-informed transformer distinguishes real methane plumes from background artifacts and confounders with exceptional precision — achieving 100% F1 on critical super-emitters while keeping false positives at 11.43%.',
-    tags: ['Physics-Informed', 'Transformer', 'Adversarial'],
+    title: 'Physics-Informed Detection',
+    text: 'A transformer architecture with adversarial training separates methane plumes from surface reflectance artifacts and atmospheric confounders. Achieves 100% F1 on the critical emitter class.',
+    tags: ['Physics-Informed', 'Transformer', 'Adversarial Training'],
   },
   {
     icon: '📊',
-    title: 'Emission Quantification',
-    text: 'Once a plume is detected, our system automatically quantifies its emission rate using the Integrated Methane Enhancement (IME) method combined with wind-field data. Results are reported in kg/hr — a clear, actionable number for mitigation planning.',
-    tags: ['kg/hr', 'IME Method', 'Wind-Based'],
+    title: 'Emission Rate Estimation',
+    text: 'Plume-integrated emission rates are computed using the Integrated Methane Enhancement (IME) method with coincident wind measurements. Output is reported in kg/hr per source.',
+    tags: ['IME Method', 'kg/hr', 'Wind-Coupled'],
   },
   {
     icon: '📍',
-    title: 'Local Quantification',
-    text: 'High-resolution ground-level quantification using drone surveys and mobile sensors validates satellite detections and pinpoints exact source locations within industrial facilities. Enables facility-scale attribution and targeted leak repair.',
-    tags: ['Drone Survey', 'Ground-Truth', 'Source Attribution'],
+    title: 'Source Attribution',
+    text: 'Detected plumes are geo-referenced and linked to facility-level infrastructure using UTM-projected spatial data, supporting site-specific attribution and reporting.',
+    tags: ['Geo-Referenced', 'UTM Projection', 'Facility-Level'],
   },
   {
     icon: '🗄️',
-    title: 'Data as a Service',
-    text: 'Access PHANTOM\'s emission intelligence through structured data deliverables — including geo-referenced plume reports, API feeds, and interactive dashboards. Integrate methane monitoring directly into your operational workflows and ESG reporting pipelines.',
-    tags: ['API Access', 'ESG Reporting', 'Dashboards'],
+    title: 'Structured Data Deliverables',
+    text: 'Detection results are packaged as geo-referenced reports including plume boundaries, emission rates, confidence scores, and wind parameters — ready for integration into existing workflows.',
+    tags: ['GeoJSON', 'Detection Reports', 'Plume Metadata'],
   },
   {
     icon: '🚨',
-    title: 'Super-Emitter Prioritization',
-    text: 'Automatically flag and rank the highest-impact emission sources by rate, frequency, and location. Focus mitigation resources where they matter most — targeting the 20% of sites responsible for 80% of total emissions to maximize climate impact per dollar spent.',
-    tags: ['Risk Ranking', 'Mitigation ROI', 'Impact Prioritization'],
+    title: 'Super-Emitter Identification',
+    text: 'Sites are ranked by emission rate to help operators prioritize the highest-impact sources. In the Permian Basin dataset, 130 of 178 detected sites exceeded the critical emitter threshold.',
+    tags: ['Ranked Alerts', 'Critical Threshold', 'Permian Basin'],
   },
 ]
 
 const pipeline = [
   {
     icon: '🛰️',
-    label: 'Satellite Imagery',
-    desc: 'Hyperspectral data from airborne & orbital platforms over target regions',
+    label: 'Hyperspectral Acquisition',
+    desc: 'Airborne SWIR radiance data collected over the target region',
     img: '/images/earth-from-space.jpg',
   },
   {
     icon: '🤖',
-    label: 'PHANTOM AI',
-    desc: 'Physics-informed transformer model detects methane spectral signatures',
+    label: 'PHANTOM Model',
+    desc: 'Physics-informed transformer detects CH₄ spectral signatures',
     img: '/images/hyperspectral.jpg',
   },
   {
     icon: '📍',
-    label: 'Detection & Quantification',
-    desc: 'Plume boundaries mapped, emission rate computed in kg/hr',
+    label: 'Plume Delineation',
+    desc: 'Plume boundaries mapped and emission rate estimated in kg/hr',
     img: '/images/emission-sources.jpg',
   },
   {
-    icon: '🚁',
-    label: 'Local Verification',
-    desc: 'Drone surveys provide ground-truth validation of flagged sites',
+    icon: '🗂️',
+    label: 'Source Attribution',
+    desc: 'Detections geo-referenced and linked to facility-level infrastructure',
     img: '/images/drone.jpg',
   },
   {
-    icon: '⚡',
-    label: 'Actionable Decision',
-    desc: 'Operators receive prioritized alerts and mitigation guidance',
+    icon: '📋',
+    label: 'Detection Report',
+    desc: 'Structured outputs delivered with rates, confidence, and location data',
     img: '/images/ground-sensors.jpg',
   },
 ]

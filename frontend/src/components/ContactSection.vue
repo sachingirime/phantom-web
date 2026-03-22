@@ -2,11 +2,10 @@
   <section id="contact" class="section">
     <div class="container">
       <div class="section-header">
-        <span class="section-tag">Get In Touch</span>
-        <h2>Request a Demo</h2>
+        <span class="section-tag">Contact</span>
+        <h2>Get in Touch</h2>
         <p>
-          Interested in PHANTOM's methane detection capabilities? Fill out the form and
-          we'll get back to you within 24 hours.
+          Reach out to discuss detection capabilities, data access, or potential research collaborations.
         </p>
       </div>
 
@@ -64,8 +63,8 @@
           <!-- Success state -->
           <div v-else class="success-state">
             <div class="success-icon">✓</div>
-            <h3>Request Sent!</h3>
-            <p>Thank you — we'll be in touch within 24 hours at <strong>{{ form.email }}</strong>.</p>
+            <h3>Message Received</h3>
+            <p>Thank you. We will follow up at <strong>{{ form.email }}</strong> as soon as possible.</p>
             <button class="btn-reset" @click="submitted = false">Send another</button>
           </div>
         </div>
@@ -88,19 +87,19 @@
             <ul class="expect-list">
               <li>
                 <span class="dot" />
-                Response within 24 hours
+                Overview of detection and quantification outputs
               </li>
               <li>
                 <span class="dot" />
-                Tailored demo of detection capabilities
+                Discussion of your region or use case
               </li>
               <li>
                 <span class="dot" />
-                Discussion of your region & use case
+                Information on data deliverable formats
               </li>
               <li>
                 <span class="dot" />
-                Data access & API integration options
+                Research collaboration and partnership inquiries welcome
               </li>
             </ul>
           </div>
