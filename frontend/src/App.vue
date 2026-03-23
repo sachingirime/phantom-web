@@ -2,8 +2,8 @@
   <div>
     <NavBar />
     <HeroSection />
-    <FeatureCards />
     <EmissionMap />
+    <FeatureCards />
     <MethaneImportance />
     <PlatformPerformance />
     <ContactSection />
