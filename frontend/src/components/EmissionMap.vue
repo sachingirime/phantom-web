@@ -86,7 +86,7 @@ function thermalRGB(t) {
 //   • plumeLen derived from polygon extent (real measured data) but NOT used as a clip
 //   • Color mapped to Q_kg_hr on log scale (same GHGSat-style colormap)
 
-const N_PARTICLES = 55   // per site; accumulates nicely without polygon
+const N_PARTICLES = 40   // per site; accumulates nicely without polygon
 const LIFETIME    = 5.0  // seconds for a particle to travel full plume length
 
 function initParticlePools(emissions) {
@@ -103,7 +103,10 @@ function initParticlePools(emissions) {
 function animatePlumes(canvas, map, pane, emissions, qMin, qMax) {
   const ctx = canvas.getContext('2d')
   let prevStamp = performance.now()
+  let lastFrameStamp = 0
+  const FRAME_INTERVAL = 1000 / 30  // cap at ~30 fps
   let raf
+  let running = true
   const mapPaneEl = map.getPane('mapPane')
 
   // Log-scale normalisation: spreads the 16–3358 kg/hr range more evenly
@@ -130,14 +133,19 @@ function animatePlumes(canvas, map, pane, emissions, qMin, qMax) {
   const pools = initParticlePools(emissions)
 
   function frame(stamp) {
+    if (!running) return
+    raf = requestAnimationFrame(frame)
+    // Frame rate cap — skip render but keep loop alive
+    if (stamp - lastFrameStamp < FRAME_INTERVAL) return
+    lastFrameStamp = stamp
     const dt = Math.min((stamp - prevStamp) / 1000, 0.05)  // cap at 50ms
     prevStamp = stamp
     const t = stamp / 1000
 
     const W = canvas.width, H = canvas.height
     const pos = L.DomUtil.getPosition(mapPaneEl)
-    pane.style.left = (-pos.x) + 'px'
-    pane.style.top  = (-pos.y) + 'px'
+    // Use transform (compositor-only) instead of left/top (triggers layout)
+    pane.style.transform = `translate(${-pos.x}px,${-pos.y}px)`
 
     ctx.clearRect(0, 0, W, H)
 
@@ -247,16 +255,19 @@ function animatePlumes(canvas, map, pane, emissions, qMin, qMax) {
       ctx.beginPath(); ctx.arc(src.x, src.y, srcR, 0, Math.PI * 2); ctx.fill()
     })
 
-    raf = requestAnimationFrame(frame)
   }
 
   raf = requestAnimationFrame(frame)
-  return () => cancelAnimationFrame(raf)
+  return {
+    stop()   { running = false; cancelAnimationFrame(raf) },
+    pause()  { running = false; cancelAnimationFrame(raf) },
+    resume() { if (!running) { running = true; prevStamp = performance.now(); raf = requestAnimationFrame(frame) } },
+  }
 }
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let mapInstance = null
-let stopAnim    = null
+let animCtrl    = null
 
 onMounted(async () => {
   const res  = await fetch('/data/emissions.json')
@@ -303,9 +314,10 @@ onMounted(async () => {
   const plumesPane = mapInstance.getPane('plumesPane')
   plumesPane.style.zIndex = '500'
   plumesPane.style.pointerEvents = 'none'
+  plumesPane.style.willChange = 'transform'
 
   const canvas = document.createElement('canvas')
-  canvas.style.cssText = 'position:absolute;pointer-events:none;'
+  canvas.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;'
   plumesPane.appendChild(canvas)
 
   function resizeCanvas() {
@@ -316,7 +328,14 @@ onMounted(async () => {
   new ResizeObserver(resizeCanvas).observe(mapEl.value)
 
   // Start animation (re-projects polygons every frame — handles pan/zoom correctly)
-  stopAnim = animatePlumes(canvas, mapInstance, plumesPane, emissions, qMin, qMax)
+  animCtrl = animatePlumes(canvas, mapInstance, plumesPane, emissions, qMin, qMax)
+
+  // Pause canvas animation when the map section is not in the viewport
+  const visObserver = new IntersectionObserver(
+    ([entry]) => entry.isIntersecting ? animCtrl.resume() : animCtrl.pause(),
+    { threshold: 0 }
+  )
+  visObserver.observe(mapEl.value)
 
   // ── Markers + popups ────────────────────────────────────────────────────────
   emissions.forEach(row => {
@@ -412,7 +431,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  if (stopAnim) stopAnim()
+  if (animCtrl) animCtrl.stop()
   if (mapInstance) mapInstance.remove()
 })
 </script>
