@@ -91,7 +91,7 @@ const impactCards = [
 }
 
 .section-dark {
-  background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
+  background: linear-gradient(160deg, #0d1f12 0%, #172b1c 100%);
   color: #fff;
 }
 
@@ -102,9 +102,9 @@ const impactCards = [
 
 .section-tag {
   display: inline-block;
-  background: rgba(59,130,246,0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(59,130,246,0.3);
+  background: rgba(22,163,74,0.15);
+  color: #4ade80;
+  border: 1px solid rgba(22,163,74,0.35);
   border-radius: 100px;
   padding: 0.3rem 1rem;
   font-size: 0.75rem;
@@ -157,7 +157,7 @@ const impactCards = [
 .impact-number {
   font-size: clamp(2.5rem, 6vw, 4rem);
   font-weight: 800;
-  color: #60a5fa;
+  color: #4ade80;
   line-height: 1;
   margin-bottom: 0.75rem;
 }
@@ -207,7 +207,7 @@ const impactCards = [
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #60a5fa;
+  color: #4ade80;
 }
 
 .sources-block p {

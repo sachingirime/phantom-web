@@ -46,7 +46,7 @@
             </div>
             <div v-if="i < pipeline.length - 1" class="pipeline-arrow">
               <svg viewBox="0 0 40 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0 8 H32 M26 2 L38 8 L26 14" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M0 8 H32 M26 2 L38 8 L26 14" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </div>
           </div>
@@ -61,9 +61,9 @@ const cards = [
   {
     abbr: 'HS',
     color: '#2563eb',
-    title: 'Airborne Hyperspectral Imaging',
-    text: 'Processes SWIR radiance data from airborne hyperspectral sensors to identify the CH₄ absorption signature. Validated on NASA AVIRIS-NG campaigns over the Permian Basin and California.',
-    tags: ['AVIRIS-NG', 'Hyperspectral', 'SWIR'],
+    title: 'Multi-Platform Hyperspectral Imaging',
+    text: 'Processes SWIR radiance data from satellite, airborne, and UAV hyperspectral sensors to identify the CH₄ absorption signature. Validated on NASA AVIRIS-NG campaigns over the Permian Basin.',
+    tags: ['Satellite', 'Airborne', 'UAV', 'SWIR'],
   },
   {
     abbr: 'ML',
@@ -149,9 +149,9 @@ const pipeline = [
 
 .section-tag {
   display: inline-block;
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
   border-radius: 100px;
   padding: 0.3rem 1rem;
   font-size: 0.75rem;
@@ -264,7 +264,7 @@ const pipeline = [
 
 /* Pipeline */
 .pipeline {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  background: linear-gradient(135deg, #0d1f12 0%, #172b1c 100%);
   border-radius: 24px;
   padding: 3.5rem 3rem;
 }
@@ -275,9 +275,9 @@ const pipeline = [
 }
 
 .pipeline-header .section-tag {
-  background: rgba(59,130,246,0.15);
-  color: #60a5fa;
-  border-color: rgba(59,130,246,0.3);
+  background: rgba(22,163,74,0.15);
+  color: #4ade80;
+  border-color: rgba(22,163,74,0.35);
 }
 
 .pipeline-header h3 {
@@ -298,7 +298,7 @@ const pipeline = [
 
 .pipeline-steps {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   gap: 0;
   flex-wrap: nowrap;
@@ -308,7 +308,7 @@ const pipeline = [
 
 .pipeline-step {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   flex-shrink: 0;
 }
 
@@ -320,6 +320,8 @@ const pipeline = [
   border: 1px solid rgba(255,255,255,0.1);
   transition: transform 0.25s, background 0.25s;
   cursor: default;
+  display: flex;
+  flex-direction: column;
 }
 
 .step-card:hover {
@@ -351,7 +353,7 @@ const pipeline = [
   left: 8px;
   width: 24px;
   height: 24px;
-  background: #3b82f6;
+  background: #16a34a;
   color: #fff;
   border-radius: 50%;
   font-size: 0.7rem;
@@ -368,7 +370,7 @@ const pipeline = [
 .step-num {
   font-size: 0.68rem;
   font-weight: 800;
-  color: #3b82f6;
+  color: #4ade80;
   letter-spacing: 0.1em;
   margin-bottom: 0.3rem;
 }
@@ -392,6 +394,7 @@ const pipeline = [
   flex-shrink: 0;
   padding: 0 2px;
   margin-top: -20px;
+  align-self: center;
 }
 
 .pipeline-arrow svg {

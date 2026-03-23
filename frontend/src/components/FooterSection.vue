@@ -42,7 +42,7 @@ const year = new Date().getFullYear()
 
 <style scoped>
 .footer {
-  background: #080f1e;
+  background: #091409;
   color: #fff;
   padding: 5rem 2rem 2.5rem;
   border-top: 1px solid rgba(255,255,255,0.06);
@@ -140,7 +140,7 @@ const year = new Date().getFullYear()
   text-decoration: none;
   transition: color 0.2s;
 }
-.footer-email:hover { color: #60a5fa; }
+.footer-email:hover { color: #4ade80; }
 
 @media (max-width: 768px) {
   .footer-top { flex-direction: column; gap: 2.5rem; }

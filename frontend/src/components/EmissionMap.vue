@@ -381,7 +381,7 @@ onMounted(async () => {
   legend.onAdd = () => {
     const div = L.DomUtil.create('div')
     div.innerHTML = `
-      <div style="background:rgba(15,23,42,0.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 16px;font-family:inherit;font-size:0.75rem;color:#fff;min-width:200px;">
+      <div style="background:rgba(13,31,18,0.92);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px 16px;font-family:inherit;font-size:0.75rem;color:#fff;min-width:200px;">
         <div style="font-weight:700;margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase;color:#94a3b8;">Emission Rate</div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
           <div style="flex:1;height:10px;border-radius:4px;background:linear-gradient(to right,rgb(0,90,255),rgb(80,0,255),rgb(200,0,220),rgb(255,0,140),rgb(255,0,60),rgb(200,0,0));"></div>
@@ -420,7 +420,7 @@ onUnmounted(() => {
 <style scoped>
 .section {
   padding: 6rem 2rem;
-  background: #0f172a;
+  background: #0d1f12;
 }
 .container { max-width: 1280px; margin: 0 auto; }
 
@@ -431,9 +431,9 @@ onUnmounted(() => {
 }
 .section-tag {
   display: inline-block;
-  background: rgba(59,130,246,0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(59,130,246,0.3);
+  background: rgba(22,163,74,0.15);
+  color: #4ade80;
+  border: 1px solid rgba(22,163,74,0.35);
   border-radius: 100px;
   padding: 0.3rem 1rem;
   font-size: 0.75rem;
@@ -466,7 +466,7 @@ onUnmounted(() => {
 
 .map-loading {
   position: absolute; inset: 0;
-  background: rgba(15,23,42,0.92);
+  background: rgba(13,31,18,0.92);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   gap: 1rem; font-size: 0.95rem; color: #94a3b8;
@@ -474,7 +474,7 @@ onUnmounted(() => {
 .spinner {
   width: 32px; height: 32px;
   border: 3px solid rgba(255,255,255,0.1);
-  border-top-color: #3b82f6;
+  border-top-color: #22c55e;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -493,11 +493,11 @@ onUnmounted(() => {
 .metric {
   display: flex; flex-direction: column;
   align-items: center; padding: 1.5rem 1rem;
-  background: rgba(15,23,42,0.7);
+  background: rgba(13,31,18,0.7);
   text-align: center; gap: 0.15rem;
   transition: background 0.2s;
 }
-.metric:hover { background: rgba(30,41,59,0.8); }
+.metric:hover { background: rgba(23,43,28,0.8); }
 .metric-value { font-size: 1.9rem; font-weight: 800; color: #fff; line-height: 1; }
 .metric-unit  { font-size: 0.72rem; color: #64748b; font-weight: 500; }
 .metric-label { font-size: 0.72rem; font-weight: 500; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; }

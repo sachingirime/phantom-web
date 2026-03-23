@@ -159,9 +159,9 @@ async function handleSubmit() {
 
 .section-tag {
   display: inline-block;
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
   border-radius: 100px;
   padding: 0.3rem 1rem;
   font-size: 0.75rem;
@@ -244,8 +244,8 @@ async function handleSubmit() {
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
   background: #fff;
 }
 
@@ -257,7 +257,7 @@ async function handleSubmit() {
 .btn-submit {
   width: 100%;
   padding: 0.9rem;
-  background: #2563eb;
+  background: #16a34a;
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -266,14 +266,14 @@ async function handleSubmit() {
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
   margin-top: 0.5rem;
 }
 
 .btn-submit:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: #15803d;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.45);
 }
 
 .btn-submit:disabled {
@@ -335,8 +335,8 @@ async function handleSubmit() {
 }
 
 .btn-reset:hover {
-  border-color: #2563eb;
-  color: #2563eb;
+  border-color: #16a34a;
+  color: #16a34a;
 }
 
 /* Sidebar */
@@ -366,8 +366,8 @@ async function handleSubmit() {
   display: flex;
   align-items: center;
   gap: 1rem;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
   border-radius: 10px;
   padding: 1rem 1.25rem;
   text-decoration: none;
@@ -375,28 +375,28 @@ async function handleSubmit() {
 }
 
 .email-btn:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
+  background: #dcfce7;
+  border-color: #86efac;
   transform: translateY(-2px);
 }
 
 .email-icon {
   font-size: 1.4rem;
-  color: #2563eb;
+  color: #16a34a;
   flex-shrink: 0;
 }
 
 .email-label {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #2563eb;
+  color: #16a34a;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .email-addr {
   font-size: 0.9rem;
-  color: #1e40af;
+  color: #15803d;
   font-weight: 500;
   margin-top: 0.1rem;
 }
@@ -420,7 +420,7 @@ async function handleSubmit() {
 .dot {
   width: 7px;
   height: 7px;
-  background: #2563eb;
+  background: #16a34a;
   border-radius: 50%;
   flex-shrink: 0;
 }

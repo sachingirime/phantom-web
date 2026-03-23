@@ -65,13 +65,13 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 1000;
-  background: rgba(10, 18, 35, 0.7);
+  background: rgba(6, 18, 10, 0.72);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(255,255,255,0.05);
   transition: background 0.3s, border-color 0.3s;
 }
 .navbar.scrolled {
-  background: rgba(8, 15, 30, 0.97);
+  background: rgba(5, 15, 9, 0.97);
   border-bottom-color: rgba(255,255,255,0.09);
 }
 
@@ -121,18 +121,18 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 .nav-cta {
   flex-shrink: 0;
   padding: 0.5rem 1.2rem;
-  background: #2563eb;
+  background: #16a34a;
   color: #fff !important;
   border-radius: 6px;
   font-size: 0.825rem;
   font-weight: 600;
   text-decoration: none;
   transition: background 0.2s, box-shadow 0.2s;
-  box-shadow: 0 0 16px rgba(37,99,235,0.3);
+  box-shadow: 0 0 16px rgba(22,163,74,0.35);
   white-space: nowrap;
   cursor: pointer;
 }
-.nav-cta:hover { background: #1d4ed8; box-shadow: 0 0 24px rgba(37,99,235,0.5); }
+.nav-cta:hover { background: #15803d; box-shadow: 0 0 24px rgba(22,163,74,0.55); }
 
 /* Hamburger */
 .hamburger {
@@ -164,7 +164,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 .mobile-menu {
   display: none;
   flex-direction: column;
-  background: rgba(8, 15, 30, 0.98);
+  background: rgba(5, 15, 9, 0.98);
   border-top: 1px solid rgba(255,255,255,0.07);
   overflow: hidden;
   max-height: 0;
@@ -183,7 +183,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 .mobile-menu a:hover { color: #fff; background: rgba(255,255,255,0.04); }
 .mobile-cta {
   margin: 1rem 1.5rem 1.25rem !important;
-  background: #2563eb !important;
+  background: #16a34a !important;
   color: #fff !important;
   border-radius: 8px !important;
   text-align: center;

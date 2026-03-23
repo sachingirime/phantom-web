@@ -59,7 +59,7 @@ function scrollTo(id) {
   align-items: center;
   justify-content: center;
   background:
-    linear-gradient(170deg, rgba(2,8,23,0.96) 0%, rgba(10,18,42,0.9) 50%, rgba(5,12,30,0.95) 100%),
+    linear-gradient(170deg, rgba(2,14,8,0.84) 0%, rgba(6,20,12,0.78) 50%, rgba(3,14,7,0.83) 100%),
     url('/images/earth-from-space.jpg') center/cover no-repeat;
   color: #fff;
   text-align: center;
@@ -71,8 +71,8 @@ function scrollTo(id) {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 50% at 50% 35%, rgba(37,99,235,0.09) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 30% at 85% 75%, rgba(99,102,241,0.07) 0%, transparent 50%);
+    radial-gradient(ellipse 70% 50% at 50% 35%, rgba(22,163,74,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 85% 75%, rgba(74,222,128,0.07) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -98,13 +98,13 @@ function scrollTo(id) {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(37,99,235,0.12);
-  border: 1px solid rgba(37,99,235,0.3);
+  background: rgba(22,163,74,0.12);
+  border: 1px solid rgba(22,163,74,0.35);
   border-radius: 100px;
   padding: 0.4rem 1.25rem;
   font-size: 0.76rem;
   font-weight: 600;
-  color: #93c5fd;
+  color: #86efac;
   letter-spacing: 0.05em;
   margin-bottom: 2rem;
   text-transform: uppercase;
@@ -196,16 +196,16 @@ function scrollTo(id) {
 
 .btn-primary {
   padding: 0.875rem 2rem;
-  background: #2563eb;
+  background: #16a34a;
   color: #fff;
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.95rem;
   text-decoration: none;
   transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 0 28px rgba(37,99,235,0.45);
+  box-shadow: 0 0 28px rgba(22,163,74,0.5);
 }
-.btn-primary:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 0 40px rgba(37,99,235,0.6); }
+.btn-primary:hover { background: #15803d; transform: translateY(-2px); box-shadow: 0 0 40px rgba(22,163,74,0.65); }
 
 .btn-ghost {
   padding: 0.875rem 2rem;

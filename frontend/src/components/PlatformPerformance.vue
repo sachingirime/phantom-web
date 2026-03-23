@@ -74,7 +74,7 @@
           </div>
           <div class="fusion-arrow">
             <svg viewBox="0 0 40 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M0 12 H32 M26 4 L38 12 L26 20" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M0 12 H32 M26 4 L38 12 L26 20" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             <span>+ Satellite</span>
           </div>
@@ -135,9 +135,9 @@ const technologies = [
 
 .section-tag {
   display: inline-block;
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
   border-radius: 100px;
   padding: 0.3rem 1rem;
   font-size: 0.75rem;
@@ -168,7 +168,7 @@ const technologies = [
 }
 
 .benchmark-block {
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  background: linear-gradient(135deg, #0d1f12 0%, #183825 100%);
   border-radius: 20px;
   padding: 3rem;
   color: #fff;
@@ -220,7 +220,7 @@ const technologies = [
 .stat-value {
   font-size: 2rem;
   font-weight: 800;
-  color: #60a5fa;
+  color: #4ade80;
   line-height: 1;
   margin-bottom: 0.4rem;
 }
@@ -361,8 +361,8 @@ const technologies = [
 }
 
 .compare-col-highlight {
-  background: #eff6ff;
-  border-color: #bfdbfe;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
 }
 
 .compare-label {
@@ -375,7 +375,7 @@ const technologies = [
 }
 
 .compare-col-highlight .compare-label {
-  color: #2563eb;
+  color: #16a34a;
 }
 
 .compare-stats {
@@ -398,7 +398,7 @@ const technologies = [
 }
 
 .highlight-val {
-  color: #1d4ed8;
+  color: #15803d;
 }
 
 .compare-key {
@@ -424,7 +424,7 @@ const technologies = [
 }
 
 .bar-fusion {
-  background: #2563eb;
+  background: #16a34a;
 }
 
 .bar-fpr {
@@ -451,7 +451,7 @@ const technologies = [
 .fusion-arrow span {
   font-size: 0.7rem;
   font-weight: 600;
-  color: #3b82f6;
+  color: #16a34a;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
