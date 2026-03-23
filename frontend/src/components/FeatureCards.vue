@@ -69,7 +69,7 @@ const cards = [
     abbr: 'ML',
     color: '#7c3aed',
     title: 'Physics-Informed Detection',
-    text: 'A transformer architecture with adversarial training separates methane plumes from surface reflectance artifacts and atmospheric confounders. Achieves 100% F1 on the critical emitter class.',
+    text: 'Atmospheric physics — including radiative transfer, solar geometry, and aerosol scattering — are integrated directly into the transformer architecture. Adversarial training separates methane plumes from surface reflectance artifacts and atmospheric confounders. Achieves 100% F1 on the critical emitter class.',
     tags: ['Physics-Informed', 'Transformer', 'Adversarial Training'],
   },
   {
